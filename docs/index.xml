@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Docs on Husenjan</title>
+    <link>http://localhost:1313/docs/</link>
+    <description>Recent content in Docs on Husenjan</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <copyright>© 2024 Husenjan</copyright>
+    <lastBuildDate>Wed, 27 Dec 2023 00:00:00 +0000</lastBuildDate><atom:link href="http://localhost:1313/docs/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>C&#43;&#43; Hooking Methods</title>
+      <link>http://localhost:1313/docs/1715896379752-cpp-hooking-methods/</link>
+      <pubDate>Wed, 27 Dec 2023 00:00:00 +0000</pubDate>
+      
+      <guid>http://localhost:1313/docs/1715896379752-cpp-hooking-methods/</guid>
+      <description>What is C++ Hooking? It&amp;rsquo;s a technique which involves changing programs control flow to by patching instruction bytes.</description>
+      <media:content xmlns:media="http://search.yahoo.com/mrss/" url="http://localhost:1313/docs/1715896379752-cpp-hooking-methods/featured.png" />
+    </item>
+    
+    <item>
+      <title>The Basics of Intel x86 Assembly</title>
+      <link>http://localhost:1313/docs/1715895328360-the-basics-of-intel-x86-assembly/</link>
+      <pubDate>Mon, 20 Nov 2023 00:00:00 +0000</pubDate>
+      
+      <guid>http://localhost:1313/docs/1715895328360-the-basics-of-intel-x86-assembly/</guid>
+      <description>Intel x86 Assembly is difficult to learn but it&amp;rsquo;s extremely useful to have the skillset.</description>
+      <media:content xmlns:media="http://search.yahoo.com/mrss/" url="http://localhost:1313/docs/1715895328360-the-basics-of-intel-x86-assembly/featured.png" />
+    </item>
+    
+    <item>
+      <title>The Azure Cheat Sheet</title>
+      <link>http://localhost:1313/docs/1715944037931-the-azure-cheat-sheet/</link>
+      <pubDate>Fri, 27 Oct 2023 00:00:00 +0000</pubDate>
+      
+      <guid>http://localhost:1313/docs/1715944037931-the-azure-cheat-sheet/</guid>
+      <description>Useful information about Azure, Intune, and other Microsoft related services.</description>
+      <media:content xmlns:media="http://search.yahoo.com/mrss/" url="http://localhost:1313/docs/1715944037931-the-azure-cheat-sheet/featured.png" />
+    </item>
+    
+    <item>
+      <title>The Red Team Cheat Sheet</title>
+      <link>http://localhost:1313/docs/1715898046093-red-team-cheat-sheet/</link>
+      <pubDate>Thu, 26 Oct 2023 00:00:00 +0000</pubDate>
+      
+      <guid>http://localhost:1313/docs/1715898046093-red-team-cheat-sheet/</guid>
+      <description>Convinent commands and advices for penetration testing.</description>
+      <media:content xmlns:media="http://search.yahoo.com/mrss/" url="http://localhost:1313/docs/1715898046093-red-team-cheat-sheet/featured.png" />
+    </item>
+    
+  </channel>
+</rss>
