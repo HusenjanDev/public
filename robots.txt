@@ -1,1 +1,3 @@
+User-agent: *
+Allow: /
 Sitemap: http://husenjan.com/sitemap.xml
