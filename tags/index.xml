@@ -9,16 +9,6 @@
     <copyright>© 2024 Husenjan</copyright>
     <lastBuildDate>Sat, 20 Apr 2024 00:00:00 +0000</lastBuildDate><atom:link href="https://husenjan.com/tags/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>Assembly</title>
-      <link>https://husenjan.com/tags/assembly/</link>
-      <pubDate>Sat, 20 Apr 2024 00:00:00 +0000</pubDate>
-      
-      <guid>https://husenjan.com/tags/assembly/</guid>
-      <description></description>
-      
-    </item>
-    
-    <item>
       <title>Programming</title>
       <link>https://husenjan.com/tags/programming/</link>
       <pubDate>Sat, 20 Apr 2024 00:00:00 +0000</pubDate>
@@ -54,6 +44,16 @@
       <pubDate>Thu, 15 Feb 2024 00:00:00 +0000</pubDate>
       
       <guid>https://husenjan.com/tags/miscellaneous/</guid>
+      <description></description>
+      
+    </item>
+    
+    <item>
+      <title>Assembly</title>
+      <link>https://husenjan.com/tags/assembly/</link>
+      <pubDate>Wed, 27 Dec 2023 00:00:00 +0000</pubDate>
+      
+      <guid>https://husenjan.com/tags/assembly/</guid>
       <description></description>
       
     </item>
