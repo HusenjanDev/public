@@ -7,7 +7,17 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <copyright>© 2024 Husenjan</copyright>
-    <lastBuildDate>Tue, 26 Mar 2024 00:00:00 +0000</lastBuildDate><atom:link href="https://husenjan.com/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sat, 20 Apr 2024 00:00:00 +0000</lastBuildDate><atom:link href="https://husenjan.com/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>MySQL Connector C&#43;&#43;</title>
+      <link>https://husenjan.com/docs/mysql-connector-cpp/</link>
+      <pubDate>Sat, 20 Apr 2024 00:00:00 +0000</pubDate>
+      
+      <guid>https://husenjan.com/docs/mysql-connector-cpp/</guid>
+      <description>MySQL Connector C++ is an C++ API which enables us to interact with MySQL server in real-time.</description>
+      <media:content xmlns:media="http://search.yahoo.com/mrss/" url="https://husenjan.com/docs/mysql-connector-cpp/featured.png" />
+    </item>
+    
     <item>
       <title>AZ-305 Review</title>
       <link>https://husenjan.com/posts/az-305-review/</link>
@@ -46,16 +56,6 @@
       <guid>https://husenjan.com/docs/cpp-hooking-methods/</guid>
       <description>What is C++ Hooking? It&amp;rsquo;s a technique which involves changing programs control flow to by patching instruction bytes.</description>
       <media:content xmlns:media="http://search.yahoo.com/mrss/" url="https://husenjan.com/docs/cpp-hooking-methods/featured.png" />
-    </item>
-    
-    <item>
-      <title>C&#43;&#43; Hooking Methods</title>
-      <link>https://husenjan.com/docs/mysql-connector-cpp/</link>
-      <pubDate>Wed, 27 Dec 2023 00:00:00 +0000</pubDate>
-      
-      <guid>https://husenjan.com/docs/mysql-connector-cpp/</guid>
-      <description>MySQL Connector C++ is an C++ API which enables us to interact with MySQL server in real-time.</description>
-      <media:content xmlns:media="http://search.yahoo.com/mrss/" url="https://husenjan.com/docs/mysql-connector-cpp/featured.png" />
     </item>
     
     <item>
