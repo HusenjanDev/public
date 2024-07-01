@@ -2,110 +2,110 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Husenjan</title>
-    <link>http://localhost:1313/</link>
+    <link>https://husenjan.com/</link>
     <description>Recent content on Husenjan</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <copyright>© 2024 Husenjan</copyright>
-    <lastBuildDate>Tue, 26 Mar 2024 00:00:00 +0000</lastBuildDate><atom:link href="http://localhost:1313/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Tue, 26 Mar 2024 00:00:00 +0000</lastBuildDate><atom:link href="https://husenjan.com/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>AZ-305 Review</title>
-      <link>http://localhost:1313/posts/1715805215402-az-305-review/</link>
+      <link>https://husenjan.com/posts/az-305-review/</link>
       <pubDate>Tue, 26 Mar 2024 00:00:00 +0000</pubDate>
       
-      <guid>http://localhost:1313/posts/1715805215402-az-305-review/</guid>
+      <guid>https://husenjan.com/posts/az-305-review/</guid>
       <description>I&amp;rsquo;m officially a certified Azure Solution Architect Expert.</description>
-      <media:content xmlns:media="http://search.yahoo.com/mrss/" url="http://localhost:1313/posts/1715805215402-az-305-review/featured.png" />
+      <media:content xmlns:media="http://search.yahoo.com/mrss/" url="https://husenjan.com/posts/az-305-review/featured.png" />
     </item>
     
     <item>
       <title>HHKB Type-S Review</title>
-      <link>http://localhost:1313/posts/1715805887667-hhkb-long-term-review/</link>
+      <link>https://husenjan.com/posts/hhkb-long-term-review/</link>
       <pubDate>Thu, 15 Feb 2024 00:00:00 +0000</pubDate>
       
-      <guid>http://localhost:1313/posts/1715805887667-hhkb-long-term-review/</guid>
+      <guid>https://husenjan.com/posts/hhkb-long-term-review/</guid>
       <description>A honest review about HHKB Type-S keyboard.</description>
-      <media:content xmlns:media="http://search.yahoo.com/mrss/" url="http://localhost:1313/posts/1715805887667-hhkb-long-term-review/featured.png" />
+      <media:content xmlns:media="http://search.yahoo.com/mrss/" url="https://husenjan.com/posts/hhkb-long-term-review/featured.png" />
     </item>
     
     <item>
       <title>AZ-500 Review</title>
-      <link>http://localhost:1313/posts/1715804800569-az-500-review/</link>
+      <link>https://husenjan.com/posts/az-500-review/</link>
       <pubDate>Sun, 11 Feb 2024 00:00:00 +0000</pubDate>
       
-      <guid>http://localhost:1313/posts/1715804800569-az-500-review/</guid>
+      <guid>https://husenjan.com/posts/az-500-review/</guid>
       <description>I&amp;rsquo;m officially a certified Azure Security Engineer Associate.</description>
-      <media:content xmlns:media="http://search.yahoo.com/mrss/" url="http://localhost:1313/posts/1715804800569-az-500-review/featured.png" />
-    </item>
-    
-    <item>
-      <title>MySQL Connector C&#43;&#43;</title>
-      <link>http://localhost:1313/docs/1717323707149-mysql-connector-cpp/</link>
-      <pubDate>Tue, 02 Jan 2024 00:00:00 +0000</pubDate>
-      
-      <guid>http://localhost:1313/docs/1717323707149-mysql-connector-cpp/</guid>
-      <description>MySQL Connector C++ is an C++ API which enables us to interact with MySQL server.</description>
-      <media:content xmlns:media="http://search.yahoo.com/mrss/" url="http://localhost:1313/docs/1717323707149-mysql-connector-cpp/featured.png" />
+      <media:content xmlns:media="http://search.yahoo.com/mrss/" url="https://husenjan.com/posts/az-500-review/featured.png" />
     </item>
     
     <item>
       <title>C&#43;&#43; Hooking Methods</title>
-      <link>http://localhost:1313/docs/1715896379752-cpp-hooking-methods/</link>
+      <link>https://husenjan.com/docs/cpp-hooking-methods/</link>
       <pubDate>Wed, 27 Dec 2023 00:00:00 +0000</pubDate>
       
-      <guid>http://localhost:1313/docs/1715896379752-cpp-hooking-methods/</guid>
+      <guid>https://husenjan.com/docs/cpp-hooking-methods/</guid>
       <description>What is C++ Hooking? It&amp;rsquo;s a technique which involves changing programs control flow to by patching instruction bytes.</description>
-      <media:content xmlns:media="http://search.yahoo.com/mrss/" url="http://localhost:1313/docs/1715896379752-cpp-hooking-methods/featured.png" />
+      <media:content xmlns:media="http://search.yahoo.com/mrss/" url="https://husenjan.com/docs/cpp-hooking-methods/featured.png" />
+    </item>
+    
+    <item>
+      <title>C&#43;&#43; Hooking Methods</title>
+      <link>https://husenjan.com/docs/mysql-connector-cpp/</link>
+      <pubDate>Wed, 27 Dec 2023 00:00:00 +0000</pubDate>
+      
+      <guid>https://husenjan.com/docs/mysql-connector-cpp/</guid>
+      <description>MySQL Connector C++ is an C++ API which enables us to interact with MySQL server in real-time.</description>
+      <media:content xmlns:media="http://search.yahoo.com/mrss/" url="https://husenjan.com/docs/mysql-connector-cpp/featured.png" />
     </item>
     
     <item>
       <title>AZ-104 Review</title>
-      <link>http://localhost:1313/posts/1715804206243-az-104-review/</link>
+      <link>https://husenjan.com/posts/az-104-review/</link>
       <pubDate>Sat, 25 Nov 2023 00:00:00 +0000</pubDate>
       
-      <guid>http://localhost:1313/posts/1715804206243-az-104-review/</guid>
+      <guid>https://husenjan.com/posts/az-104-review/</guid>
       <description>I&amp;rsquo;m offically a certified Azure Administrator Associate.</description>
-      <media:content xmlns:media="http://search.yahoo.com/mrss/" url="http://localhost:1313/posts/1715804206243-az-104-review/featured.png" />
+      <media:content xmlns:media="http://search.yahoo.com/mrss/" url="https://husenjan.com/posts/az-104-review/featured.png" />
     </item>
     
     <item>
       <title>The Basics of Intel x86 Assembly</title>
-      <link>http://localhost:1313/docs/1715895328360-the-basics-of-intel-x86-assembly/</link>
+      <link>https://husenjan.com/docs/the-basics-of-intel-x86-assembly/</link>
       <pubDate>Mon, 20 Nov 2023 00:00:00 +0000</pubDate>
       
-      <guid>http://localhost:1313/docs/1715895328360-the-basics-of-intel-x86-assembly/</guid>
+      <guid>https://husenjan.com/docs/the-basics-of-intel-x86-assembly/</guid>
       <description>Intel x86 Assembly is difficult to learn but it&amp;rsquo;s extremely useful to have the skillset.</description>
-      <media:content xmlns:media="http://search.yahoo.com/mrss/" url="http://localhost:1313/docs/1715895328360-the-basics-of-intel-x86-assembly/featured.png" />
+      <media:content xmlns:media="http://search.yahoo.com/mrss/" url="https://husenjan.com/docs/the-basics-of-intel-x86-assembly/featured.png" />
     </item>
     
     <item>
       <title>OSCP Review</title>
-      <link>http://localhost:1313/posts/1715802208761-oscp-review/</link>
+      <link>https://husenjan.com/posts/oscp-review/</link>
       <pubDate>Fri, 27 Oct 2023 00:00:00 +0000</pubDate>
       
-      <guid>http://localhost:1313/posts/1715802208761-oscp-review/</guid>
+      <guid>https://husenjan.com/posts/oscp-review/</guid>
       <description>I&amp;rsquo;m officially a Offensive Security Certified Professional.</description>
-      <media:content xmlns:media="http://search.yahoo.com/mrss/" url="http://localhost:1313/posts/1715802208761-oscp-review/featured.png" />
+      <media:content xmlns:media="http://search.yahoo.com/mrss/" url="https://husenjan.com/posts/oscp-review/featured.png" />
     </item>
     
     <item>
       <title>The Azure Cheat Sheet</title>
-      <link>http://localhost:1313/docs/1715944037931-the-azure-cheat-sheet/</link>
+      <link>https://husenjan.com/docs/the-azure-cheat-sheet/</link>
       <pubDate>Fri, 27 Oct 2023 00:00:00 +0000</pubDate>
       
-      <guid>http://localhost:1313/docs/1715944037931-the-azure-cheat-sheet/</guid>
+      <guid>https://husenjan.com/docs/the-azure-cheat-sheet/</guid>
       <description>Useful information about Azure, Intune, and other Microsoft related services.</description>
-      <media:content xmlns:media="http://search.yahoo.com/mrss/" url="http://localhost:1313/docs/1715944037931-the-azure-cheat-sheet/featured.png" />
+      <media:content xmlns:media="http://search.yahoo.com/mrss/" url="https://husenjan.com/docs/the-azure-cheat-sheet/featured.png" />
     </item>
     
     <item>
       <title>The Red Team Cheat Sheet</title>
-      <link>http://localhost:1313/docs/1715898046093-red-team-cheat-sheet/</link>
+      <link>https://husenjan.com/docs/red-team-cheat-sheet/</link>
       <pubDate>Thu, 26 Oct 2023 00:00:00 +0000</pubDate>
       
-      <guid>http://localhost:1313/docs/1715898046093-red-team-cheat-sheet/</guid>
+      <guid>https://husenjan.com/docs/red-team-cheat-sheet/</guid>
       <description>Convinent commands and advices for penetration testing.</description>
-      <media:content xmlns:media="http://search.yahoo.com/mrss/" url="http://localhost:1313/docs/1715898046093-red-team-cheat-sheet/featured.png" />
+      <media:content xmlns:media="http://search.yahoo.com/mrss/" url="https://husenjan.com/docs/red-team-cheat-sheet/featured.png" />
     </item>
     
   </channel>

@@ -2,20 +2,30 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Programming on Husenjan</title>
-    <link>http://localhost:1313/tags/programming/</link>
+    <link>https://husenjan.com/tags/programming/</link>
     <description>Recent content in Programming on Husenjan</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <copyright>© 2024 Husenjan</copyright>
-    <lastBuildDate>Wed, 27 Dec 2023 00:00:00 +0000</lastBuildDate><atom:link href="http://localhost:1313/tags/programming/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Wed, 27 Dec 2023 00:00:00 +0000</lastBuildDate><atom:link href="https://husenjan.com/tags/programming/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>C&#43;&#43; Hooking Methods</title>
-      <link>http://localhost:1313/docs/1715896379752-cpp-hooking-methods/</link>
+      <link>https://husenjan.com/docs/cpp-hooking-methods/</link>
       <pubDate>Wed, 27 Dec 2023 00:00:00 +0000</pubDate>
       
-      <guid>http://localhost:1313/docs/1715896379752-cpp-hooking-methods/</guid>
+      <guid>https://husenjan.com/docs/cpp-hooking-methods/</guid>
       <description>What is C++ Hooking? It&amp;rsquo;s a technique which involves changing programs control flow to by patching instruction bytes.</description>
-      <media:content xmlns:media="http://search.yahoo.com/mrss/" url="http://localhost:1313/docs/1715896379752-cpp-hooking-methods/featured.png" />
+      <media:content xmlns:media="http://search.yahoo.com/mrss/" url="https://husenjan.com/docs/cpp-hooking-methods/featured.png" />
+    </item>
+    
+    <item>
+      <title>C&#43;&#43; Hooking Methods</title>
+      <link>https://husenjan.com/docs/mysql-connector-cpp/</link>
+      <pubDate>Wed, 27 Dec 2023 00:00:00 +0000</pubDate>
+      
+      <guid>https://husenjan.com/docs/mysql-connector-cpp/</guid>
+      <description>MySQL Connector C++ is an C++ API which enables us to interact with MySQL server in real-time.</description>
+      <media:content xmlns:media="http://search.yahoo.com/mrss/" url="https://husenjan.com/docs/mysql-connector-cpp/featured.png" />
     </item>
     
   </channel>
