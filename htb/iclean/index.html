@@ -8,14 +8,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="X-UA-Compatible" content="ie=edge" />
   
-  <title>AZ-500 Review &middot; Husenjan</title>
-  <meta name="title" content="AZ-500 Review &middot; Husenjan" />
+  <title>HackTheBox: IClean Writeup &middot; Husenjan</title>
+  <meta name="title" content="HackTheBox: IClean Writeup &middot; Husenjan" />
   
-  <meta name="description" content="I&#39;m officially a certified Azure Security Engineer Associate." />
-  <meta name="keywords" content="Azure, Cloud Computing, " />
+  <meta name="description" content="A HackTheBox writeup for the machine IClean." />
+  <meta name="keywords" content="HTB, " />
   
   
-  <link rel="canonical" href="http://localhost:1313/posts/az-500-review/" />
+  <link rel="canonical" href="http://localhost:1313/htb/iclean/" />
   
   
   
@@ -62,51 +62,48 @@
   
   
   
-  <meta property="og:url" content="http://localhost:1313/posts/az-500-review/">
+  <meta property="og:url" content="http://localhost:1313/htb/iclean/">
   <meta property="og:site_name" content="Husenjan">
-  <meta property="og:title" content="AZ-500 Review">
-  <meta property="og:description" content="Hi there 👋, I recently passed the AZ-500 certification and I decided to share my experience with studying and taking the certification.">
+  <meta property="og:title" content="HackTheBox: IClean Writeup">
+  <meta property="og:description" content="A HackTheBox writeup for the machine IClean.">
   <meta property="og:locale" content="en">
   <meta property="og:type" content="article">
-    <meta property="article:section" content="posts">
-    <meta property="article:published_time" content="2024-02-11T00:00:00+00:00">
-    <meta property="article:modified_time" content="2024-02-11T00:00:00+00:00">
-    <meta property="article:tag" content="Azure">
-    <meta property="article:tag" content="Cloud Computing">
-    <meta property="og:image" content="http://localhost:1313/posts/az-500-review/featured.png">
+    <meta property="article:section" content="htb">
+    <meta property="article:published_time" content="2023-11-25T00:00:00+00:00">
+    <meta property="article:modified_time" content="2023-11-25T00:00:00+00:00">
+    <meta property="article:tag" content="HTB">
 
   
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:image" content="http://localhost:1313/posts/az-500-review/featured.png">
-  <meta name="twitter:title" content="AZ-500 Review">
-  <meta name="twitter:description" content="Hi there 👋, I recently passed the AZ-500 certification and I decided to share my experience with studying and taking the certification.">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="HackTheBox: IClean Writeup">
+  <meta name="twitter:description" content="A HackTheBox writeup for the machine IClean.">
 
   
   <script type="application/ld+json">
   [{
     "@context": "https://schema.org",
     "@type": "Article",
-    "articleSection": "Posts",
-    "name": "AZ-500 Review",
-    "headline": "AZ-500 Review",
-    "description": "Hi there 👋, I recently passed the AZ-500 certification and I decided to share my experience with studying and taking the certification.",
-    "abstract": "I\u0026rsquo;m officially a certified Azure Security Engineer Associate.",
+    "articleSection": "Htbs",
+    "name": "HackTheBox: IClean Writeup",
+    "headline": "HackTheBox: IClean Writeup",
+    "description": "A HackTheBox writeup for the machine IClean.",
+    "abstract": "A HackTheBox writeup for the machine IClean.",
     "inLanguage": "en",
-    "url" : "http:\/\/localhost:1313\/posts\/az-500-review\/",
+    "url" : "http:\/\/localhost:1313\/htb\/iclean\/",
     "author" : {
       "@type": "Person",
       "name": "Husenjan"
     },
-    "copyrightYear": "2024",
-    "dateCreated": "2024-02-11T00:00:00\u002b00:00",
-    "datePublished": "2024-02-11T00:00:00\u002b00:00",
+    "copyrightYear": "2023",
+    "dateCreated": "2023-11-25T00:00:00\u002b00:00",
+    "datePublished": "2023-11-25T00:00:00\u002b00:00",
     
-    "dateModified": "2024-02-11T00:00:00\u002b00:00",
+    "dateModified": "2023-11-25T00:00:00\u002b00:00",
     
-    "keywords": ["Azure","Cloud Computing"],
+    "keywords": ["HTB"],
     
     "mainEntityOfPage": "true",
-    "wordCount": "460"
+    "wordCount": "0"
   }]
   </script>
 
@@ -129,17 +126,6 @@
 <script src="/lib/jquery/jquery.slim.min.js" integrity=""></script>
 
 
-
-  
-  
-  
-  
-  <script
-    defer
-    type="text/javascript"
-    src="/js/mermaid.bundle.8f914444a6d0727a29c7de557469c6db88cebd176d23e18befe72f85086b13388f3ddb1d13a330dcaabe2456e895af4f1001040a7de2b1a34a8c94d84b335ce1.js"
-    integrity="sha512-j5FERKbQcnopx95VdGnG24jOvRdtI&#43;GL7&#43;cvhQhrEziPPdsdE6Mw3Kq&#43;JFbola9PEAEECn3isaNKjJTYSzNc4Q=="
-  ></script>
 
 
 
@@ -423,7 +409,7 @@
   <header id="single_header" class="mt-5 max-w-prose">
     
     <h1 class="mt-0 text-4xl font-extrabold text-neutral-900 dark:text-neutral">
-      AZ-500 Review
+      HackTheBox: IClean Writeup
     </h1>
     <div class="mt-1 mb-6 text-base text-neutral-500 dark:text-neutral-400 print:hidden">
       
@@ -447,11 +433,7 @@
 
 
 
-  
 
-
-
-  
 
 
 
@@ -468,7 +450,7 @@
 <div class="flex flex-row flex-wrap items-center">
   
   
-  <time datetime="2024-02-11 00:00:00 &#43;0000 UTC">11 February 2024</time><span class="px-2 text-primary-500">&middot;</span><span>460 words</span><span class="px-2 text-primary-500">&middot;</span><span title="Reading time">3 mins</span>
+  <time datetime="2023-11-25 00:00:00 &#43;0000 UTC">25 November 2023</time>
   
 
   
@@ -492,18 +474,10 @@
   
   
   
-  <span style="margin-top:0.5rem" class="mr-2" onclick="window.open(&#34;/tags/azure/&#34;,'_self');">
+  <span style="margin-top:0.5rem" class="mr-2" onclick="window.open(&#34;/tags/htb/&#34;,'_self');">
     <span class="flex" style="cursor: pointer;">
   <span class="rounded-md border border-primary-400 px-1 py-[1px] text-xs font-normal text-primary-700 dark:border-primary-600 dark:text-primary-400">
-    Azure
-  </span>
-</span>
-  </span>
-  
-  <span style="margin-top:0.5rem" class="mr-2" onclick="window.open(&#34;/tags/cloud-computing/&#34;,'_self');">
-    <span class="flex" style="cursor: pointer;">
-  <span class="rounded-md border border-primary-400 px-1 py-[1px] text-xs font-normal text-primary-700 dark:border-primary-600 dark:text-primary-400">
-    Cloud Computing
+    HTB
   </span>
 </span>
   </span>
@@ -624,100 +598,6 @@
 
         <div class="article-content max-w-prose mb-20">
           
-
-<h2 class="relative group">Introduction 
-    <div id="introduction" class="anchor"></div>
-    
-    <span
-        class="absolute top-0 w-6 transition-opacity opacity-0 ltr:-left-6 rtl:-right-6 not-prose group-hover:opacity-100">
-        <a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700"
-            style="text-decoration-line: none !important;" href="#introduction" aria-label="Anchor">#</a>
-    </span>        
-    
-</h2>
-<p>The <a href="https://learn.microsoft.com/en-us/credentials/certifications/exams/az-500/"   target="_blank">
-    <strong>Azure Security Engineer (AZ-500)</strong></a> certification goes through different Azure resources and Azure security features that can be used to secure our Azure environment. I recently decided to take that certification because Azure Security facinates me and since that knowledge can come in good use while working with Azure.</p>
-
-
-<h2 class="relative group">Preperation 
-    <div id="preperation" class="anchor"></div>
-    
-    <span
-        class="absolute top-0 w-6 transition-opacity opacity-0 ltr:-left-6 rtl:-right-6 not-prose group-hover:opacity-100">
-        <a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700"
-            style="text-decoration-line: none !important;" href="#preperation" aria-label="Anchor">#</a>
-    </span>        
-    
-</h2>
-<p>First, I read through the <a href="https://learn.microsoft.com/en-us/credentials/certifications/exams/az-500/"   target="_blank">
-    <strong>Microsoft Learn: Azure Security Engineer</strong></a> course and while going through the course I followed the exercies in my own Azure environment. Here&rsquo;s a overview of the things that were covered in the course.</p>
-<ul>
-<li>Microsoft Entra ID</li>
-<li>Microsoft Entra ID Licenses</li>
-<li>Microsoft Entra ID Groups</li>
-<li>Microsoft Entra ID Roles</li>
-<li>Azure RBAC Roles</li>
-<li>Microsoft Entra ID Protection</li>
-<li>Conditional Access</li>
-<li>Zero Trust</li>
-<li>Microsoft Entra PIM</li>
-<li>Microsoft Defender for Cloud/Endpoint/Servers/Storage/Key Vault</li>
-<li>Azure Enterprise Application</li>
-<li>Azure Blueprints</li>
-<li>Azure Bastion</li>
-<li>Azure Key Vault</li>
-<li>Azure SQL</li>
-<li>Azure Firewall</li>
-<li>Managed Identities
-<ul>
-<li>User-Assigned Identities</li>
-<li>System-Assigned Identities</li>
-</ul>
-</li>
-<li>Azure Event Hub</li>
-<li>Azure Logic App</li>
-<li>Azure Geography</li>
-</ul>
-<p>Once I was completely finished with the Microsoft course materials, I decided to dig deeper into the different Azure resources and Azure security features by creating diagrams about them.</p>
-<div class="mermaid" align="center">
-  
-flowchart TB;
-  subgraph "Pass-Through Authentication"
-    AD{Active Directory}
-    AAD{Microsoft Entra ID}
-    AAgent(Authentication Agent)
-    User(User)
-
-    AD <-- Validation --> AAgent <--> AAD <--> User --> AD
-
-    style User fill:#b8f218,stroke:#333,stroke-width:1px
-  end
-
-</div>
-
-<p>The diagrams significantly increased my understanding about Azure as it forced me to reference different Azure resources and Azure security features together. After creating multiple of diagrams and linking resources together I decided to do multiple of choices from the internet.</p>
-
-
-<h2 class="relative group">Exam 
-    <div id="exam" class="anchor"></div>
-    
-    <span
-        class="absolute top-0 w-6 transition-opacity opacity-0 ltr:-left-6 rtl:-right-6 not-prose group-hover:opacity-100">
-        <a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700"
-            style="text-decoration-line: none !important;" href="#exam" aria-label="Anchor">#</a>
-    </span>        
-    
-</h2>
-<p>When I&rsquo;m studying for an certification I tend to over study therefore I decided to book the exam at 09:00 AM at 11/02/2024. The day I was going to take the exam I was extremely nervous but once the exam started I became even more nervous as the exam had 57 questions including case study, and labs.</p>
-<ul>
-<li>Multiple of choices were extremely difficult and I spent decent amount of time finishing them all.</li>
-<li>Non-skipeable multiple of choices were easy and I managed to finish them off relatively quickly.</li>
-<li>Case Study had difficult questions but I had to rush through them as I had little amount of time left to finish off the labs.</li>
-<li>Labs were the worst part of the exam as I had 7 minutes to finish them off and I only managed to finish 4 off before the time ran out.</li>
-</ul>
-<p>Unfortunately, the time ran out before I could finish of all the lab questions therefore I thought that I failed the exam because usually when you pass a Microsoft certification a congratulation page shows up but in this case it did not show up. However, when I visited my Microsoft profile I saw that I had successfully passed the <a href="https://learn.microsoft.com/api/credentials/share/en-us/Husenjan-6066/63DB89B5064D17FF?sharingId=7C7334F06B6A5AA4"   target="_blank">
-    <strong>Azure Security Engineer (AZ-500) certification</strong></a>.</p>
-
         </div>
         
         
@@ -736,8 +616,8 @@ flowchart TB;
           
         
       <script>
-        var oid = "views_posts\\AZ-500-Review\\index.md"
-        var oid_likes = "likes_posts\\AZ-500-Review\\index.md"
+        var oid = "views_htb\\iclean\\index.md"
+        var oid_likes = "likes_htb\\iclean\\index.md"
       </script>
       
       
@@ -753,13 +633,7 @@ flowchart TB;
   </footer>
 </article>
 
-      <div id="top-scroller" class="pointer-events-none absolute top-[110vh] bottom-0 w-12 ltr:right-0 rtl:left-0">
-  <a href="#the-top"
-    class="pointer-events-auto sticky top-[calc(100vh-5.5rem)] flex h-12 w-12 mb-16 items-center justify-center rounded-full bg-neutral/50 text-xl text-neutral-700 hover:text-primary-600 dark:bg-neutral-800/50 dark:text-neutral dark:hover:text-primary-400"
-    aria-label="Scroll to top" title="Scroll to top">
-    &uarr;
-  </a>
-</div>
+      
     </main><footer id="site-footer" class="py-10 print:hidden">
   
   

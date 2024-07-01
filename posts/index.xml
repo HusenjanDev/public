@@ -2,60 +2,60 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Posts on Husenjan</title>
-    <link>https://husenjan.com/posts/</link>
+    <link>http://localhost:1313/posts/</link>
     <description>Recent content in Posts on Husenjan</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <copyright>© 2024 Husenjan</copyright>
-    <lastBuildDate>Tue, 26 Mar 2024 00:00:00 +0000</lastBuildDate><atom:link href="https://husenjan.com/posts/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Tue, 26 Mar 2024 00:00:00 +0000</lastBuildDate><atom:link href="http://localhost:1313/posts/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>AZ-305 Review</title>
-      <link>https://husenjan.com/posts/az-305-review/</link>
+      <link>http://localhost:1313/posts/az-305-review/</link>
       <pubDate>Tue, 26 Mar 2024 00:00:00 +0000</pubDate>
       
-      <guid>https://husenjan.com/posts/az-305-review/</guid>
+      <guid>http://localhost:1313/posts/az-305-review/</guid>
       <description>I&amp;rsquo;m officially a certified Azure Solution Architect Expert.</description>
-      <media:content xmlns:media="http://search.yahoo.com/mrss/" url="https://husenjan.com/posts/az-305-review/featured.png" />
+      <media:content xmlns:media="http://search.yahoo.com/mrss/" url="http://localhost:1313/posts/az-305-review/featured.png" />
     </item>
     
     <item>
       <title>HHKB Type-S Review</title>
-      <link>https://husenjan.com/posts/hhkb-long-term-review/</link>
+      <link>http://localhost:1313/posts/hhkb-long-term-review/</link>
       <pubDate>Thu, 15 Feb 2024 00:00:00 +0000</pubDate>
       
-      <guid>https://husenjan.com/posts/hhkb-long-term-review/</guid>
+      <guid>http://localhost:1313/posts/hhkb-long-term-review/</guid>
       <description>A honest review about HHKB Type-S keyboard.</description>
-      <media:content xmlns:media="http://search.yahoo.com/mrss/" url="https://husenjan.com/posts/hhkb-long-term-review/featured.png" />
+      <media:content xmlns:media="http://search.yahoo.com/mrss/" url="http://localhost:1313/posts/hhkb-long-term-review/featured.png" />
     </item>
     
     <item>
       <title>AZ-500 Review</title>
-      <link>https://husenjan.com/posts/az-500-review/</link>
+      <link>http://localhost:1313/posts/az-500-review/</link>
       <pubDate>Sun, 11 Feb 2024 00:00:00 +0000</pubDate>
       
-      <guid>https://husenjan.com/posts/az-500-review/</guid>
+      <guid>http://localhost:1313/posts/az-500-review/</guid>
       <description>I&amp;rsquo;m officially a certified Azure Security Engineer Associate.</description>
-      <media:content xmlns:media="http://search.yahoo.com/mrss/" url="https://husenjan.com/posts/az-500-review/featured.png" />
+      <media:content xmlns:media="http://search.yahoo.com/mrss/" url="http://localhost:1313/posts/az-500-review/featured.png" />
     </item>
     
     <item>
       <title>AZ-104 Review</title>
-      <link>https://husenjan.com/posts/az-104-review/</link>
+      <link>http://localhost:1313/posts/az-104-review/</link>
       <pubDate>Sat, 25 Nov 2023 00:00:00 +0000</pubDate>
       
-      <guid>https://husenjan.com/posts/az-104-review/</guid>
+      <guid>http://localhost:1313/posts/az-104-review/</guid>
       <description>I&amp;rsquo;m offically a certified Azure Administrator Associate.</description>
-      <media:content xmlns:media="http://search.yahoo.com/mrss/" url="https://husenjan.com/posts/az-104-review/featured.png" />
+      <media:content xmlns:media="http://search.yahoo.com/mrss/" url="http://localhost:1313/posts/az-104-review/featured.png" />
     </item>
     
     <item>
       <title>OSCP Review</title>
-      <link>https://husenjan.com/posts/oscp-review/</link>
+      <link>http://localhost:1313/posts/oscp-review/</link>
       <pubDate>Fri, 27 Oct 2023 00:00:00 +0000</pubDate>
       
-      <guid>https://husenjan.com/posts/oscp-review/</guid>
+      <guid>http://localhost:1313/posts/oscp-review/</guid>
       <description>I&amp;rsquo;m officially a Offensive Security Certified Professional.</description>
-      <media:content xmlns:media="http://search.yahoo.com/mrss/" url="https://husenjan.com/posts/oscp-review/featured.png" />
+      <media:content xmlns:media="http://search.yahoo.com/mrss/" url="http://localhost:1313/posts/oscp-review/featured.png" />
     </item>
     
   </channel>
