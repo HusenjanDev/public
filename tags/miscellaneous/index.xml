@@ -2,20 +2,20 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Miscellaneous on Husenjan</title>
-    <link>http://localhost:1313/tags/miscellaneous/</link>
+    <link>https://husenjan.com/tags/miscellaneous/</link>
     <description>Recent content in Miscellaneous on Husenjan</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <copyright>© 2024 Husenjan</copyright>
-    <lastBuildDate>Thu, 15 Feb 2024 00:00:00 +0000</lastBuildDate><atom:link href="http://localhost:1313/tags/miscellaneous/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Thu, 15 Feb 2024 00:00:00 +0000</lastBuildDate><atom:link href="https://husenjan.com/tags/miscellaneous/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>HHKB Type-S Review</title>
-      <link>http://localhost:1313/posts/hhkb-long-term-review/</link>
+      <link>https://husenjan.com/posts/hhkb-long-term-review/</link>
       <pubDate>Thu, 15 Feb 2024 00:00:00 +0000</pubDate>
       
-      <guid>http://localhost:1313/posts/hhkb-long-term-review/</guid>
+      <guid>https://husenjan.com/posts/hhkb-long-term-review/</guid>
       <description>A honest review about HHKB Type-S keyboard.</description>
-      <media:content xmlns:media="http://search.yahoo.com/mrss/" url="http://localhost:1313/posts/hhkb-long-term-review/featured.png" />
+      <media:content xmlns:media="http://search.yahoo.com/mrss/" url="https://husenjan.com/posts/hhkb-long-term-review/featured.png" />
     </item>
     
   </channel>

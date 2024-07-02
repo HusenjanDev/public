@@ -3,91 +3,91 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
 
   <url>
-    <loc>http://localhost:1313/docs/</loc>
+    <loc>https://husenjan.com/docs/</loc>
     <lastmod>2024-04-20T00:00:00+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>http://localhost:1313/</loc>
+    <loc>https://husenjan.com/</loc>
     <lastmod>2024-04-20T00:00:00+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>http://localhost:1313/docs/mysql-connector-cpp/</loc>
+    <loc>https://husenjan.com/docs/mysql-connector-cpp/</loc>
     <lastmod>2024-04-20T00:00:00+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>http://localhost:1313/posts/az-305-review/</loc>
+    <loc>https://husenjan.com/posts/az-305-review/</loc>
     <lastmod>2024-03-26T00:00:00+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>http://localhost:1313/posts/</loc>
+    <loc>https://husenjan.com/posts/</loc>
     <lastmod>2024-03-26T00:00:00+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>http://localhost:1313/posts/hhkb-long-term-review/</loc>
+    <loc>https://husenjan.com/posts/hhkb-long-term-review/</loc>
     <lastmod>2024-02-15T00:00:00+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>http://localhost:1313/posts/az-500-review/</loc>
+    <loc>https://husenjan.com/posts/az-500-review/</loc>
     <lastmod>2024-02-11T00:00:00+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>http://localhost:1313/docs/cpp-hooking-methods/</loc>
+    <loc>https://husenjan.com/docs/cpp-hooking-methods/</loc>
     <lastmod>2023-12-27T00:00:00+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>http://localhost:1313/posts/az-104-review/</loc>
+    <loc>https://husenjan.com/posts/az-104-review/</loc>
     <lastmod>2023-11-25T00:00:00+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>http://localhost:1313/htb/iclean/</loc>
+    <loc>https://husenjan.com/htb/iclean/</loc>
     <lastmod>2023-11-25T00:00:00+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>http://localhost:1313/htb/</loc>
+    <loc>https://husenjan.com/htb/</loc>
     <lastmod>2023-11-25T00:00:00+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>http://localhost:1313/docs/the-basics-of-intel-x86-assembly/</loc>
+    <loc>https://husenjan.com/docs/the-basics-of-intel-x86-assembly/</loc>
     <lastmod>2023-11-20T00:00:00+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>http://localhost:1313/posts/oscp-review/</loc>
+    <loc>https://husenjan.com/posts/oscp-review/</loc>
     <lastmod>2023-10-27T00:00:00+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>http://localhost:1313/docs/the-azure-cheat-sheet/</loc>
+    <loc>https://husenjan.com/docs/the-azure-cheat-sheet/</loc>
     <lastmod>2023-10-27T00:00:00+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>http://localhost:1313/docs/red-team-cheat-sheet/</loc>
+    <loc>https://husenjan.com/docs/red-team-cheat-sheet/</loc>
     <lastmod>2023-10-26T00:00:00+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.5</priority>
