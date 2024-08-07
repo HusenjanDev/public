@@ -1,0 +1,96 @@
+---
+title: "AZ-305 Review"
+date: 2024-03-26
+draft: false
+description: "I'm officially a certified Azure Solution Architect."
+thumbnail: /assets/images/AZ-305-Review.png
+---
+
+## Introduction
+
+I obtained the [**Azure Security Engineer Associate (AZ-500)**](../az-500-review) certification for a month ago and right after passing it. I decided to get the [**Azure Solution Architect Expert (AZ-305)**](https://learn.microsoft.com/en-us/credentials/certifications/exams/az-305/) certification since the knowledge obtained from AZ-104 and AZ-500 correlates with AZ-305.
+
+##  Preperation
+
+As always I first read through the [**Microsoft Learn: Designing Microsoft Azure Infastructure Solutions**](https://learn.microsoft.com/en-us/credentials/certifications/exams/az-305/) course. While going through the course I took notes and created graphs to further increase my understanding about Azure resources and features. Here is a example of the graphs which I make during the note taking process:
+
+**Azure Service Bus**
+
+```mermaid
+flowchart LR;
+1(Sender)
+11(Receiver 1)
+12(Receiver 2)
+13(Receiver 3)
+
+subgraph subgraph1["Queues"]
+		subgraph subgraph2["Queue 1"]
+		2(Message)
+		3(Message)
+		4(Message)
+	end
+	subgraph subgraph3["Queue 2"]
+		5(Message)
+		6(Message)
+		7(Message)
+	end
+	subgraph subgraph4["Queue 3"]
+		8(Message)
+		9(Message)
+		10(Message)
+	end
+end
+1 --> subgraph1
+subgraph1 --> 11
+subgraph1 --> 12
+subgraph1 --> 13
+```
+
+**Azure Event Hub**
+
+```mermaid
+flowchart BT;
+	subgraph subgraph1["Data"]
+		1[Event Hub]
+	end
+	subgraph subgraph2["Data"]
+		2(Streaming Data)
+		3(Log, Files, Media)
+		4(Weather Data)
+		5(Business Data)
+	end 
+	subgraph subgraph3["Process"]
+		6[Azure Functions]
+		7[Batch Analytics]
+		8[Azure Data Explorer]
+	end
+	subgraph2 --> subgraph1
+	subgraph1 --> subgraph3
+```
+
+I also spent a lot of time going through my notes and researching the Azure resources and features which I wasn't familiar with such as:
+
+- Azure Service Fabric
+- Azure Cache for Redis
+- Azure Application Insights
+- Azure Data Lake
+- Azure Data Factory
+- Azure IT Service Management Connector
+- Azure NetApp
+- Azure Diagnostic Extension
+- Azure HDInsights
+- Azure SQL Analytics
+
+Once I was familiar with these Azure resources and features, I spend decent amount of time re-calling the things which I learned throughout AZ-104, AZ-500, and AZ-305 course materials.
+
+## Exam
+
+Today at 20:00, I was going through my notes and re-calling the things which I forgot. Out of boredom I decided to check if there were any AZ-305 exam seats available on PersonVUE and I saw one was available at 20:30 so I quickly purchased it and joined the AZ-305 exam.
+
+My adrenaline was extremely high during the AZ-305 exam as I was taking the exam without preparing for it which is abnormal for me. Here's a overview of my experience with AZ-305 exam: 
+
+- Multiple of choices were difficult but I quickly went through all of these questions as my adrenaline was high.
+- Non-skipeable multiple of coices wasn't going my way as I was speed reading through some of the questions and probably got one or two questions wrong.
+- Case study was difficult but I was confident which the answers which I selected as I have been researching Azure for a long-time now.
+
+I finished 59 questions within 30 minutes and accidentally ended up pressing **End** button on the exam and my adrenaline was higher but once I saw the 780 score. I was reliefed and extremely happy that I managed to pass the [**Azure Solution Architect Expert (AZ-305)**](https://learn.microsoft.com/api/credentials/share/en-us/Husenjan/AE5226222B6183C4?sharingId=7C7334F06B6A5AA4) certification.
