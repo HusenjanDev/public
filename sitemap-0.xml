@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:mobile="http://www.google.com/schemas/sitemap-mobile/1.0" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
+<url><loc>https://husenjan.com</loc><lastmod>2024-12-31T14:27:11.147Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://husenjan.com/htb</loc><lastmod>2024-12-31T14:27:11.147Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://husenjan.com/documents</loc><lastmod>2024-12-31T14:27:11.147Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://husenjan.com/posts</loc><lastmod>2024-12-31T14:27:11.147Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://husenjan.com/posts/az-104-review</loc><lastmod>2024-12-31T14:27:11.147Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://husenjan.com/posts/az-305-review</loc><lastmod>2024-12-31T14:27:11.147Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://husenjan.com/posts/az-500-review</loc><lastmod>2024-12-31T14:27:11.147Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://husenjan.com/posts/hhkb-long-term-review</loc><lastmod>2024-12-31T14:27:11.147Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://husenjan.com/posts/md-102-review</loc><lastmod>2024-12-31T14:27:11.147Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://husenjan.com/posts/ms-102-review</loc><lastmod>2024-12-31T14:27:11.147Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://husenjan.com/posts/oscp-review</loc><lastmod>2024-12-31T14:27:11.147Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://husenjan.com/htb/htb-administrator</loc><lastmod>2024-12-31T14:27:11.147Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://husenjan.com/htb/htb-alert</loc><lastmod>2024-12-31T14:27:11.147Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://husenjan.com/htb/htb-certified</loc><lastmod>2024-12-31T14:27:11.147Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://husenjan.com/htb/htb-chemistry</loc><lastmod>2024-12-31T14:27:11.147Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://husenjan.com/htb/htb-cicada</loc><lastmod>2024-12-31T14:27:11.147Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://husenjan.com/htb/htb-compiled</loc><lastmod>2024-12-31T14:27:11.147Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://husenjan.com/htb/htb-linkvortex</loc><lastmod>2024-12-31T14:27:11.147Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://husenjan.com/htb/htb-monitorsthree</loc><lastmod>2024-12-31T14:27:11.147Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://husenjan.com/htb/htb-sightless</loc><lastmod>2024-12-31T14:27:11.147Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://husenjan.com/htb/htb-underpass</loc><lastmod>2024-12-31T14:27:11.147Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://husenjan.com/documents/abusing-active-directory-certificate-service</loc><lastmod>2024-12-31T14:27:11.147Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://husenjan.com/documents/building-a-kubernetes-cluster</loc><lastmod>2024-12-31T14:27:11.147Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://husenjan.com/documents/cpp-hooking-methods</loc><lastmod>2024-12-31T14:27:11.147Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://husenjan.com/documents/creating-a-phishing-campaign</loc><lastmod>2024-12-31T14:27:11.147Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://husenjan.com/documents/mysql-connector-cpp</loc><lastmod>2024-12-31T14:27:11.147Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://husenjan.com/documents/red-team-cheat-sheet</loc><lastmod>2024-12-31T14:27:11.147Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://husenjan.com/documents/terraform-for-microsoft-azure</loc><lastmod>2024-12-31T14:27:11.147Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://husenjan.com/documents/the-azure-cheat-sheet</loc><lastmod>2024-12-31T14:27:11.147Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://husenjan.com/documents/the-basics-of-intel-x86-assembly</loc><lastmod>2024-12-31T14:27:11.147Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://husenjan.com/documents/the-basics-of-mysql</loc><lastmod>2024-12-31T14:27:11.147Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://husenjan.com/documents/the-microsoft-azure-documentation</loc><lastmod>2024-12-31T14:27:11.147Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://husenjan.com/documents/understanding-json-web-token</loc><lastmod>2024-12-31T14:27:11.147Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+</urlset>

