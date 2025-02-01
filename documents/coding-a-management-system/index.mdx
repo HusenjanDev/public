@@ -1,0 +1,45 @@
+---
+title: "Coding A Management System"
+date: 2025-1-31
+description: "I was facing issues with managin assets, shipments, and products so I decided to code a application to solve these challenges."
+keywords: ["JWT", "JSON Web Token", "Understanding JSON Web Token"]
+draft: false
+---
+
+## Information
+
+At my current workplace it has become difficutl to track assets, shipments, and products as it comes with the following challenges: 
+
+* What phone, headset, and other miscellanous equipment's were given to the user when they joined us?
+* Who sent the shipment and where is it supposed to go?
+* What is the HS Code and ECCN Code of the product?
+
+These are the challenges which I'm facing in the organization and I decided to solve these challenges by programming a web application in NextJS.
+
+## Login System
+
+The authentication system I decided to use for the project is [Auth.JS](https://authjs.dev/) as it's has great reputation and it's also commonly used by developers to create authentication for web applications. It also comes with capabilities to support authentication systems such as GitHub, Google, Twitter, and etc...
+
+<img className="border border-1 border-zinc-800 rounded-lg" src="/assets/images/coding-a-management-system/coding-a-management-system-1.png" width="1500" height="1500" />
+
+Anyway, the way the authentication system is setup is by only authenticated access to following urls `/`, `/assets`, and `/shipments`. And if the user tries to access `/assets` or any of the other urls without being authenticated they are pushed to login page and if their credentials are valid a JWT token is generated and that will allow them to access all the different urls.
+
+## Asset Management
+
+I'm currently managing equipment's for over 100 employees and each of them are getting a laptop, phone, headset, and other miscellaneous equipment's and that can become difficult to track.
+
+<img className="border border-1 border-zinc-800 rounded-lg" src="/assets/images/coding-a-management-system/coding-a-management-system-2.png" width="1500" height="1500" />
+
+To combat these challenges, I decided to create 3 different tabs one for phones, headset, and other miscell-aneous equipment's. It also allows me to see the amount of money that has been spent on purchasing all these assets in-case the management is interested in reducing the spending.
+
+## Shipment & Product Management
+
+Another challenge which I was facing was shipping equipment's to other countries as these requires ECCN Code and HS Code which is difficult to find for some products. This can waste a-lot of your time especially if the product is not commonly used by other organizations.
+
+<img className="rounded-lg border border-1 border-zinc-800" src="/assets/images/coding-a-management-system/coding-a-management-system-3.png" width="1500" height="1500" />
+
+To solve that challenge, I implemented two sections such as one for managing shipments and another for product informations. The shipment section will contain information about shipments meanwhile the product section will allow us to search up equipment's and quickly find the ECCN code and HS code of equipment.
+
+## Released Soon
+
+I'm currently working on adding comments and cleaing up the code of the prohject. Once that is completed I'll be releasing the project to everyone to potentially help others who are facing similar challenges with their work environment. This was an really interesting project to develop and I plan to continue developing the web application as the years comes.
