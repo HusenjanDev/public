@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0">
+    <channel>
+      <title>Husenjan</title>
+      <link>https://husenjan.com</link>
+      <description>Last 10 notes on Husenjan</description>
+      <generator>Quartz -- quartz.jzhao.xyz</generator>
+      <item>
+    <title>Introduction to Penetration Testing</title>
+    <link>https://husenjan.com/Penetration-Testing/0000-Introduction</link>
+    <guid>https://husenjan.com/Penetration-Testing/0000-Introduction</guid>
+    <description>What is Penetration Testing? Penetration Testing (Pentest) is a organized and authorized attack which the purpose is about finding security vulnerabilities in an organization and use these security vulnerabilities to gain access to the organization’s systems and then further elevate our privileges b...</description>
+    <pubDate>Sun, 20 Apr 2025 00:00:00 GMT</pubDate>
+  </item><item>
+    <title>Information Gathering</title>
+    <link>https://husenjan.com/Penetration-Testing/0001-Information-Gathering</link>
+    <guid>https://husenjan.com/Penetration-Testing/0001-Information-Gathering</guid>
+    <description>OSINT OSINT (Open Source Intelligence) is about gathering information about our target using public resources available for us in the internet.</description>
+    <pubDate>Tue, 15 Apr 2025 00:00:00 GMT</pubDate>
+  </item><item>
+    <title>Exploiting Active Directory Certificate Service</title>
+    <link>https://husenjan.com/Documents/0010-Abusing-Active-Directory-Certificate-Services</link>
+    <guid>https://husenjan.com/Documents/0010-Abusing-Active-Directory-Certificate-Services</guid>
+    <description>The Active Directory Certificate Service (ADCS) can be exploited to compromise the whole environment.</description>
+    <pubDate>Tue, 31 Dec 2024 00:00:00 GMT</pubDate>
+  </item><item>
+    <title>Creating A Phishing Campaign</title>
+    <link>https://husenjan.com/Documents/0009-Create-A-Phishing-Campaign</link>
+    <guid>https://husenjan.com/Documents/0009-Create-A-Phishing-Campaign</guid>
+    <description>Microsoft Attack Simulation comes with compact features for us to do our phishing campaigns.</description>
+    <pubDate>Wed, 25 Dec 2024 00:00:00 GMT</pubDate>
+  </item><item>
+    <title>Understanding JSON Web Token (JWT)</title>
+    <link>https://husenjan.com/Documents/0007-Understanding-JSON-Web-Token</link>
+    <guid>https://husenjan.com/Documents/0007-Understanding-JSON-Web-Token</guid>
+    <description>What is JSON Web Token? How can I use it for authentication and authorization?</description>
+    <pubDate>Fri, 25 Oct 2024 00:00:00 GMT</pubDate>
+  </item><item>
+    <title>The Microsoft Azure Documentation</title>
+    <link>https://husenjan.com/Documents/0006-The-Microsoft-Azure-Documentation</link>
+    <guid>https://husenjan.com/Documents/0006-The-Microsoft-Azure-Documentation</guid>
+    <description>Useful information's about Microsoft Azure.</description>
+    <pubDate>Sat, 19 Oct 2024 00:00:00 GMT</pubDate>
+  </item><item>
+    <title>Terraform for Microsoft Azure</title>
+    <link>https://husenjan.com/Documents/0005-Terraform-for-Microsoft-Azure</link>
+    <guid>https://husenjan.com/Documents/0005-Terraform-for-Microsoft-Azure</guid>
+    <description>Combining Terraform with Microsoft Azure is a game changer.</description>
+    <pubDate>Wed, 02 Oct 2024 00:00:00 GMT</pubDate>
+  </item><item>
+    <title>Building A Kubernetes Cluster</title>
+    <link>https://husenjan.com/Documents/0008-Building-A-Kubernetes-Cluster</link>
+    <guid>https://husenjan.com/Documents/0008-Building-A-Kubernetes-Cluster</guid>
+    <description>How can I build our own Kubernetes Cluster? In this document, I'll go step-by-step setting up a Kubernetes Cluster.</description>
+    <pubDate>Sat, 28 Sep 2024 00:00:00 GMT</pubDate>
+  </item><item>
+    <title>The Basics Of SQL</title>
+    <link>https://husenjan.com/Documents/0004-The-Basics-Of-MySQL</link>
+    <guid>https://husenjan.com/Documents/0004-The-Basics-Of-MySQL</guid>
+    <description>What is SQL? Why is the language so popular amongs it-professionals.</description>
+    <pubDate>Wed, 25 Sep 2024 00:00:00 GMT</pubDate>
+  </item><item>
+    <title>MS-102 Certification Review</title>
+    <link>https://husenjan.com/Certifications/0005-MS-102-Certification-Review</link>
+    <guid>https://husenjan.com/Certifications/0005-MS-102-Certification-Review</guid>
+    <description> Introduction About two years ago I made myself a promise to obtain following certifications AZ-900, MS-900, SC-900, OSCP, AZ-500, AZ-104, AZ-305, and MS-102 to increase my knowledge about cloud technologies and cyber security.</description>
+    <pubDate>Tue, 03 Sep 2024 00:00:00 GMT</pubDate>
+  </item>
+    </channel>
+  </rss>
